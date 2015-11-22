@@ -29,7 +29,12 @@ class App:
             self.result.pack()
     
     def download(self, index):
-        os.startfile(audiojack.select(index))
+        file = audiojack.select(index)
+        self.file = Button(self.frame, text=file, command=partial(self.openFile, file))
+        self.file.pack()
+    
+    def openFile(self, file):
+        os.startfile(file)
 
 root = Tk()
 root.configure()
