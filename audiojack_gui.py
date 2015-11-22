@@ -22,10 +22,10 @@ class App:
         self.submit.pack()
     
     def search(self):
-        print self.urlInput.get()
         results = audiojack.get_results(self.urlInput.get())
         for i, result in enumerate(results):
-            self.result = Button(self.frame, text=result, command=partial(self.download, i))
+            text = '%s - %s [from %s]' % (result[0], result[1], result[2])
+            self.result = Button(self.frame, text=text, command=partial(self.download, i))
             self.result.pack()
     
     def download(self, index):
