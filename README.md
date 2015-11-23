@@ -9,9 +9,3 @@ A GUI front end for AudioJack written in Python.
  - [mutagen](https://bitbucket.org/lazka/mutagen)
  - [musicbrainzngs v0.6.dev0](https://github.com/alastair/python-musicbrainzngs)
  - [youtube-dl](https://github.com/rg3/youtube-dl)
-
-## Usage
-First, you must set a user agent in the source code. This will let MusicBrainz know who is accessing their database and prevent abuse of their services.
-
-    audiojack.set_useragent('Name', 'Version')
-**Note:** Both "Name" and "Version" should be strings.
