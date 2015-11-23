@@ -8,7 +8,7 @@ import audiojack
 
 audiojack.set_useragent('AudioJack-GUI', '0.1')
 
-class App:
+class AudioJackGUI(object):
     def __init__(self, master):
         self.frame = Frame(master)
         self.frame.pack()
@@ -16,7 +16,7 @@ class App:
         self.title = Label(self.frame, text='AudioJack')
         self.title.pack()
         
-        self.url = Label(self.frame, text='Enter URL: ')
+        self.url = Label(self.frame, text='Enter Youtube or SoundCloud URL: ')
         self.url.pack()
         self.urlInput = Entry(self.frame)
         self.urlInput.pack()
@@ -65,5 +65,5 @@ class App:
 
 root = Tk()
 root.title('AudioJack-GUI Beta')
-app = App(root)
+app = AudioJackGUI(root)
 root.mainloop()
