@@ -64,6 +64,6 @@ class App:
         os.startfile(file)
 
 root = Tk()
-root.configure()
+root.title('AudioJack-GUI Beta')
 app = App(root)
 root.mainloop()
