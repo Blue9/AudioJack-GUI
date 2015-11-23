@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 from cStringIO import StringIO
 import audiojack
 
-#audiojack.set_useragent('name', 'version') MUST SET THIS
+audiojack.set_useragent('AudioJack-GUI', '0.1')
 
 class App:
     def __init__(self, master):
