@@ -58,7 +58,9 @@ class AudioJackGUI(object):
             self.result = Button(self.results_frame, text=text, fg='#fff', bg='#444', image=self.image_tk[i], compound=TOP, command=partial(self.download, i))
             self.result.grid(column=i%4, row=i/4)
         self.results_frame.pack()
-        
+        self.create_custom_frame()
+    
+    def create_custom_frame(self):
         self.custom_frame = Frame(self.frame, bg='#2c3c50')
         self.artist_label = Label(self.custom_frame, fg='#fff', bg='#2c3c50', text='Artist: ')
         self.artist_input = Entry(self.custom_frame, fg='#000')
