@@ -22,10 +22,16 @@ class AudioJackGUI(object):
         self.url_input = Entry(self.frame)
         self.url_input.pack()
 
-        self.submit = Button(self.frame, text='Go!', fg='#fff', bg='#20648f', command=self.search)
+        self.submit = Button(self.frame, text='Go!', fg='#fff', bg='#20648f', activeforeground='#fff', activebackground='#1a5274', command=self.search)
         self.submit.pack()
     
     def reset(self):
+        try:
+            self.results_label.pack_forget()
+            self.results_label.destroy()
+        except Exception:
+            pass
+        
         try:
             self.results_frame.pack_forget()
             self.results_frame.destroy()
@@ -48,6 +54,8 @@ class AudioJackGUI(object):
         self.reset()
         self.results = audiojack.get_results(self.url_input.get())
         self.results_frame = Frame(self.frame, bg='#2c3c50')
+        self.results_label = Label(self.frame, text='Results:', bg='#2c3c50', fg='#fff')
+        self.results_label.pack()
         self.image_tk = []
         for i, result in enumerate(self.results[:8]):
             image_data = Image.open(StringIO(audiojack.get_cover_art_as_data(self.results[i][3]).decode('base64')))
@@ -55,10 +63,18 @@ class AudioJackGUI(object):
             self.image_tk.append(ImageTk.PhotoImage(image=image_data))
         for i, result in enumerate(self.results[:8]):
             text = '%s\n%s\n%s' % (result[0], result[1], result[2])
-            self.result = Button(self.results_frame, text=text, fg='#fff', bg='#444', image=self.image_tk[i], compound=TOP, command=partial(self.download, i))
+            self.result = Button(self.results_frame, text=text, fg='#fff', bg='#444', activeforeground='#fff', activebackground='#222', image=self.image_tk[i], highlightbackground='#444', highlightthickness=4, compound=TOP, command=partial(self.download, i))
+            self.result.bind('<Enter>', partial(self.result_hover, self.result))
+            self.result.bind('<Leave>', partial(self.result_leave, self.result))
             self.result.grid(column=i%4, row=i/4)
         self.results_frame.pack()
         self.create_custom_frame()
+    
+    def result_hover(self, button, event):
+        button.config(bg='#333')
+    
+    def result_leave(self, button, event):
+        button.config(bg='#444')
     
     def create_custom_frame(self):
         self.custom_frame = Frame(self.frame, bg='#2c3c50')
@@ -68,7 +84,7 @@ class AudioJackGUI(object):
         self.title_input = Entry(self.custom_frame, fg='#000')
         self.album_label = Label(self.custom_frame, fg='#fff', bg='#2c3c50', text='Album: ')
         self.album_input = Entry(self.custom_frame, fg='#000')
-        self.custom_submit = Button(self.custom_frame, text='Download using custom tags', fg='#fff', bg='#20648f', command=self.custom)
+        self.custom_submit = Button(self.custom_frame, text='Download using custom tags', fg='#fff', bg='#20648f', activeforeground='#fff', activebackground='#1a5274', command=self.custom)
         self.artist_label.grid(column=0, row=0)
         self.artist_input.grid(column=1, row=0)
         self.title_label.grid(column=0, row=1)
