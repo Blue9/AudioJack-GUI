@@ -56,7 +56,6 @@ class AudioJackGUI(object):
     
     def search(self):
         self.reset()
-        print self.url_input.get(0.0, END)
         self.results = audiojack.get_results(self.url_input.get(0.0, END))
         self.results_frame = Frame(self.frame, bg=self.bg)
         self.results_label = Label(self.frame, text='Results:', font=self.font, bg=self.bg, fg='#fff')
