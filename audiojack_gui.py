@@ -10,16 +10,18 @@ audiojack.set_useragent('AudioJack-GUI', '0.1')
 
 class AudioJackGUI(object):
     def __init__(self, master):
+        self.bg = '#124'
+        
         master.minsize(width=1280, height=720)
-        self.frame = Frame(master, bg='#2c3c50')
+        self.frame = Frame(master, bg=self.bg)
         self.frame.pack(fill=BOTH, expand=1)
 
         self.font = ('Segoe UI', 10)
         
-        self.title = Label(self.frame, text='AudioJack', font=self.font, fg='#fff', bg='#2c3c50')
+        self.title = Label(self.frame, text='AudioJack', font=('Segoe UI Light', 24), fg='#fff', bg=self.bg)
         self.title.pack()
         
-        self.url = Label(self.frame, text='Enter YouTube or SoundCloud URL', font=self.font, fg='#fff', bg='#2c3c50')
+        self.url = Label(self.frame, text='Enter YouTube or SoundCloud URL', font=self.font, fg='#fff', bg=self.bg)
         self.url.pack()
         self.url_input = Entry(self.frame)
         self.url_input.pack()
@@ -55,8 +57,8 @@ class AudioJackGUI(object):
     def search(self):
         self.reset()
         self.results = audiojack.get_results(self.url_input.get())
-        self.results_frame = Frame(self.frame, bg='#2c3c50')
-        self.results_label = Label(self.frame, text='Results:', font=self.font, bg='#2c3c50', fg='#fff')
+        self.results_frame = Frame(self.frame, bg=self.bg)
+        self.results_label = Label(self.frame, text='Results:', font=self.font, bg=self.bg, fg='#fff')
         self.results_label.pack()
         self.image_tk = []
         for i, result in enumerate(self.results[:8]):
@@ -65,7 +67,7 @@ class AudioJackGUI(object):
             self.image_tk.append(ImageTk.PhotoImage(image=image_data))
         for i, result in enumerate(self.results[:8]):
             text = '%s\n%s\n%s' % (result[0], result[1], result[2])
-            self.result = Button(self.results_frame, text=text, font=self.font, fg='#fff', bg='#444', activeforeground='#fff', activebackground='#222', image=self.image_tk[i], highlightbackground='#444', highlightthickness=4, compound=TOP, command=partial(self.download, i))
+            self.result = Button(self.results_frame, text=text, font=self.font, fg='#fff', bg='#444', activeforeground='#fff', activebackground='#111', cursor='bottom_side', image=self.image_tk[i], highlightbackground='#444', highlightthickness=4, compound=TOP, command=partial(self.download, i))
             self.result.bind('<Enter>', partial(self.result_hover, self.result))
             self.result.bind('<Leave>', partial(self.result_leave, self.result))
             self.result.grid(column=i%4, row=i/4)
@@ -73,19 +75,19 @@ class AudioJackGUI(object):
         self.create_custom_frame()
     
     def result_hover(self, button, event):
-        button.config(bg='#333')
+        button.config(bg='#222')
     
     def result_leave(self, button, event):
         button.config(bg='#444')
     
     def create_custom_frame(self):
-        self.custom_frame = Frame(self.frame, bg='#2c3c50')
-        self.custom_title = Label(self.custom_frame, fg='#fff', bg='#2c3c50', text='Custom tags:', font=self.font)
-        self.artist_label = Label(self.custom_frame, fg='#fff', bg='#2c3c50', text='Artist: ', font=self.font)
+        self.custom_frame = Frame(self.frame, bg=self.bg)
+        self.custom_title = Label(self.custom_frame, fg='#fff', bg=self.bg, text='Custom tags:', font=self.font)
+        self.artist_label = Label(self.custom_frame, fg='#fff', bg=self.bg, text='Artist: ', font=self.font)
         self.artist_input = Entry(self.custom_frame, fg='#000', font=self.font)
-        self.title_label = Label(self.custom_frame, fg='#fff', bg='#2c3c50', text='Title: ', font=self.font)
+        self.title_label = Label(self.custom_frame, fg='#fff', bg=self.bg, text='Title: ', font=self.font)
         self.title_input = Entry(self.custom_frame, fg='#000', font=self.font)
-        self.album_label = Label(self.custom_frame, fg='#fff', bg='#2c3c50', text='Album: ', font=self.font)
+        self.album_label = Label(self.custom_frame, fg='#fff', bg=self.bg, text='Album: ', font=self.font)
         self.album_input = Entry(self.custom_frame, fg='#000', font=self.font)
         self.custom_submit = Button(self.custom_frame, text='Download using custom tags', font=self.font, fg='#fff', bg='#20648f', activeforeground='#fff', activebackground='#1a5274', command=self.custom)
         self.custom_title.grid(row=0, columnspan=2)
