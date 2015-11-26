@@ -1,5 +1,5 @@
 # AudioJack-GUI
-A GUI front end for AudioJack written in Python.
+A GUI front end for [AudioJack](https://github.com/Blue9/AudioJack) written in Python.
 
 ## Screenshots
 ![AudioJack-GUI in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot.png)
