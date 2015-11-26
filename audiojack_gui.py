@@ -21,13 +21,13 @@ class AudioJackGUI(object):
         self.title = Label(self.frame, text='AudioJack', font=('Segoe UI Light', 24), fg='#fff', bg=self.bg)
         self.title.pack()
         
-        self.url = Label(self.frame, text='Enter YouTube or SoundCloud URL', font=self.font, fg='#fff', bg=self.bg)
+        self.url = Label(self.frame, text='Enter a YouTube or SoundCloud URL below.', font=self.font, fg='#fff', bg=self.bg)
         self.url.pack()
         self.url_input = Entry(self.frame)
         self.url_input.pack()
 
-        self.submit = Button(self.frame, text='Go!', font=self.font, fg='#fff', bg='#20648f', activeforeground='#fff', activebackground='#1a5274', command=self.search)
-        self.submit.pack()
+        self.submit = Button(self.frame, text='Go!', font=self.font, fg='#fff', bg='#20648f', relief=FLAT, activeforeground='#fff', activebackground='#1a5274', command=self.search)
+        self.submit.pack(pady=10)
     
     def reset(self):
         try:
