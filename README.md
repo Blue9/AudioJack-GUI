@@ -3,6 +3,7 @@ A GUI front end for [AudioJack](https://github.com/Blue9/AudioJack) written in P
 
 ## Screenshots
 ![AudioJack-GUI in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot.png)
+![AudioJack-GUI v2 in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot_v2.png)
 
 ## Requirements
 1. Python 2.7
