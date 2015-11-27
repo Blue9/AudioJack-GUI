@@ -46,6 +46,8 @@ class AudioJackGUI_v2(object):
         file = audiojack.select(index)
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
+        self.results_label.pack_forget()
+        self.results_label.destroy()
         self.results_frame.pack_forget()
         self.results_frame.destroy()
         self.file.pack()
