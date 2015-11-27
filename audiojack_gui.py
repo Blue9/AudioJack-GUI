@@ -15,7 +15,7 @@ class AudioJackGUI(object):
         master.minsize(width=1280, height=720)
         self.frame = Frame(master, bg=self.bg)
         self.frame.pack(fill=BOTH, expand=1)
-
+        
         self.font = ('Segoe UI', 10)
         
         self.title = Label(self.frame, text='AudioJack', font=('Segoe UI Light', 24), fg='#fff', bg=self.bg)
