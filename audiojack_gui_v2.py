@@ -67,6 +67,27 @@ class AudioJackGUI_v2(object):
             self.result = ttk.Button(self.results_frame, text=text, image=self.image_tk[i], compound=TOP, command=partial(self.download, i))
             self.result.grid(column=i%4, row=i/4)
         self.results_frame.pack()
+        self.create_custom_frame()
+    
+    def create_custom_frame(self):
+        self.custom_frame = ttk.Frame(self.mainframe)
+        self.custom_title = ttk.Label(self.custom_frame, text='Custom tags:')
+        self.artist_label = ttk.Label(self.custom_frame, text='Artist: ')
+        self.artist_input = Text(self.custom_frame, width=20, height=1, font=self.font)
+        self.title_label = ttk.Label(self.custom_frame, text='Title: ')
+        self.title_input = Text(self.custom_frame, width=20, height=1, font=self.font)
+        self.album_label = ttk.Label(self.custom_frame, text='Album: ')
+        self.album_input = Text(self.custom_frame, width=20, height=1, font=self.font)
+        self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags', command=self.custom)
+        self.custom_title.grid(row=0, columnspan=2)
+        self.artist_label.grid(column=0, row=1)
+        self.artist_input.grid(column=1, row=1)
+        self.title_label.grid(column=0, row=2)
+        self.title_input.grid(column=1, row=2)
+        self.album_label.grid(column=0, row=3)
+        self.album_input.grid(column=1, row=3)
+        self.custom_submit.grid(row=4, columnspan=2, sticky=EW, pady=10)
+        self.custom_frame.pack(pady=10)
     
     def download(self, index):
         self.reset()
@@ -77,6 +98,16 @@ class AudioJackGUI_v2(object):
         self.results_label.destroy()
         self.results_frame.pack_forget()
         self.results_frame.destroy()
+        self.file.pack()
+    
+    def custom(self):
+        artist = self.artist_input.get(0.0, END).replace('\n', '')
+        title = self.title_input.get(0.0, END).replace('\n', '')
+        album = self.album_input.get(0.0, END).replace('\n', '')
+        self.reset()
+        file = audiojack.custom(artist, title, album)
+        text = 'Open %s' % file
+        self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
     
     def open_file(self, file):
