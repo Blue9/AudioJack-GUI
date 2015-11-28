@@ -26,7 +26,33 @@ class AudioJackGUI_v2(object):
         self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
         self.submit.pack()
     
+    def reset(self):
+        try:
+            self.results_label.pack_forget()
+            self.results_label.destroy()
+        except Exception:
+            pass
+        
+        try:
+            self.results_frame.pack_forget()
+            self.results_frame.destroy()
+        except Exception:
+            pass
+        
+        try:
+            self.custom_frame.pack_forget()
+            self.custom_frame.destroy()
+        except Exception:
+            pass
+        
+        try:
+            self.file.pack_forget()
+            self.file.destroy()
+        except Exception:
+            pass
+    
     def search(self):
+        self.reset()
         self.results = audiojack.get_results(self.url.get(0.0, END))
         self.results_frame = ttk.Frame(self.mainframe)
         self.results_label = ttk.Label(self.mainframe, text='Results:', font=self.font)
@@ -43,6 +69,7 @@ class AudioJackGUI_v2(object):
         self.results_frame.pack()
     
     def download(self, index):
+        self.reset()
         file = audiojack.select(index)
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
