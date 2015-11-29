@@ -21,6 +21,7 @@ class AudioJackGUI_v2(object):
         self.title.pack()
         
         self.url = Text(self.mainframe, width=41, height=1, font=self.font, wrap=NONE)
+        self.url.bind('<Return>', self.search)
         self.url.pack()
         
         self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
@@ -51,7 +52,7 @@ class AudioJackGUI_v2(object):
         except Exception:
             pass
     
-    def search(self):
+    def search(self, event=None):
         self.reset()
         self.results = audiojack.get_results(self.url.get(0.0, END))
         self.results_frame = ttk.Frame(self.mainframe)

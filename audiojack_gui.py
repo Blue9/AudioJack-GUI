@@ -24,6 +24,7 @@ class AudioJackGUI(object):
         self.url = Label(self.frame, text='Enter a YouTube or SoundCloud URL below.', font=self.font, fg='#fff', bg=self.bg)
         self.url.pack()
         self.url_input = Text(self.frame, width=41, height=1, pady=4, font=self.font, wrap=NONE)
+        self.url_input.bind('<Return>', self.search)
         self.url_input.pack()
 
         self.submit = Button(self.frame, width=40, text='Go!', font=self.font, fg='#fff', bg='#20648f', relief=FLAT, activeforeground='#fff', activebackground='#1a5274', command=self.search)
@@ -54,7 +55,7 @@ class AudioJackGUI(object):
         except Exception:
             pass
     
-    def search(self):
+    def search(self, event=None):
         self.reset()
         self.results = audiojack.get_results(self.url_input.get(0.0, END))
         self.results_frame = Frame(self.frame, bg=self.bg)
