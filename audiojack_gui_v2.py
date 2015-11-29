@@ -17,7 +17,7 @@ class AudioJackGUI_v2(object):
         self.mainframe = ttk.Frame(master)
         self.mainframe.pack()
         
-        self.title = ttk.Label(self.mainframe, text='AudioJack')
+        self.title = ttk.Label(self.mainframe, text='AudioJack', font=('Segoe UI Light', 24))
         self.title.pack()
         
         self.url = Text(self.mainframe, width=41, height=1, font=self.font, wrap=NONE)
