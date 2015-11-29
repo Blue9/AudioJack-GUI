@@ -3,9 +3,6 @@ A GUI front end for [AudioJack](https://github.com/Blue9/AudioJack) written in P
 
 [Official website](http://blue9.github.io/AudioJack-GUI/)
 
-## Get it
-Download the latest release [here](https://github.com/Blue9/AudioJack-GUI/releases/latest).
-
 ## Screenshots
 ![AudioJack-GUI in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot.png)
 ![AudioJack-GUI v2 in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot_v2.png)
