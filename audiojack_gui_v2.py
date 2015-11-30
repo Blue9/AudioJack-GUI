@@ -28,6 +28,8 @@ class AudioJackGUI_v2(object):
         self.submit.pack()
     
     def reset(self):
+        self.url.delete(0.0, END)
+        
         try:
             self.results_label.pack_forget()
             self.results_label.destroy()
@@ -53,8 +55,9 @@ class AudioJackGUI_v2(object):
             pass
     
     def search(self, event=None):
+        input = self.url.get(0.0, END).replace('\n', '')
         self.reset()
-        self.results = audiojack.get_results(self.url.get(0.0, END))
+        self.results = audiojack.get_results(input)
         self.results_frame = ttk.Frame(self.mainframe)
         self.results_label = ttk.Label(self.mainframe, text='Results:', font=self.font)
         self.results_label.pack()
