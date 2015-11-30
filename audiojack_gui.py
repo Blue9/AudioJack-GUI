@@ -31,6 +31,8 @@ class AudioJackGUI(object):
         self.submit.pack(pady=10)
     
     def reset(self):
+        self.url_input.delete(0.0, END)
+        
         try:
             self.results_label.pack_forget()
             self.results_label.destroy()
@@ -56,8 +58,9 @@ class AudioJackGUI(object):
             pass
     
     def search(self, event=None):
+        input = self.url_input.get(0.0, END).replace('\n', '')
         self.reset()
-        self.results = audiojack.get_results(self.url_input.get(0.0, END))
+        self.results = audiojack.get_results(input)
         self.results_frame = Frame(self.frame, bg=self.bg)
         self.results_label = Label(self.frame, text='Results:', font=self.font, bg=self.bg, fg='#fff')
         self.results_label.pack()
