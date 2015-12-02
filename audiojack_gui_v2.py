@@ -20,15 +20,15 @@ class AudioJackGUI_v2(object):
         self.title = ttk.Label(self.mainframe, text='AudioJack', font=('Segoe UI Light', 24))
         self.title.pack()
         
-        self.url = Text(self.mainframe, width=41, height=1, font=self.font, wrap=NONE)
-        self.url.bind('<Return>', self.search)
-        self.url.pack()
+        self.url_input = Text(self.mainframe, width=41, height=1, font=self.font, wrap=NONE)
+        self.url_input.bind('<Return>', self.search)
+        self.url_input.pack()
         
         self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
         self.submit.pack()
     
     def reset(self):
-        self.url.delete(0.0, END)
+        self.url_input.delete(0.0, END)
         
         try:
             self.results_label.pack_forget()
@@ -55,7 +55,7 @@ class AudioJackGUI_v2(object):
             pass
     
     def search(self, event=None):
-        input = self.url.get(0.0, END).replace('\n', '')
+        input = self.url_input.get(0.0, END).replace('\n', '')
         self.reset()
         self.results = audiojack.get_results(input)
         self.results_frame = ttk.Frame(self.mainframe)
