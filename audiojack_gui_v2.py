@@ -62,9 +62,9 @@ class AudioJackGUI_v2(object):
             pass
     
     def get_results(self, input):
-        results = audiojack.get_results(input)
+        results = audiojack.get_results(input)[:8]
         images = []
-        for i, result in enumerate(results[:8]):
+        for i, result in enumerate(results):
             image_data = Image.open(StringIO(audiojack.get_cover_art_as_data(results[i][3]).decode('base64')))
             image_data = image_data.resize((200, 200), Image.ANTIALIAS)
             images.append(ImageTk.PhotoImage(image=image_data))
@@ -76,6 +76,9 @@ class AudioJackGUI_v2(object):
         self.q = Queue.Queue()
         t = Thread(target=self.get_results, args=[input])
         t.start()
+        self.search_progress = ttk.Progressbar(length=200)
+        self.search_progress.pack()
+        self.search_progress.start(200)
         self.master.after(100, self.add_results)
     
     def add_results(self):
@@ -83,10 +86,12 @@ class AudioJackGUI_v2(object):
             self.results_images = self.q.get(0)
             self.results = self.results_images[0]
             self.images = self.results_images[1]
+            self.search_progress.pack_forget()
+            self.search_progress.destroy()
             self.results_frame = ttk.Frame(self.mainframe)
             self.results_label = ttk.Label(self.mainframe, text='Results:', font=self.font)
             self.results_label.pack()
-            for i, result in enumerate(self.results[:8]):
+            for i, result in enumerate(self.results):
                 text = '%s\n%s\n%s' % (result[0], result[1], result[2])
                 self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP, command=partial(self.download, i))
                 self.result.grid(column=i%4, row=i/4)
@@ -124,11 +129,16 @@ class AudioJackGUI_v2(object):
         self.download_queue = Queue.Queue()
         t = Thread(target=self.get_file, args=[index, self.download_queue])
         t.start()
+        self.download_progress = ttk.Progressbar(length=200)
+        self.download_progress.pack()
+        self.download_progress.start(200)
         self.master.after(100, self.add_file)
     
     def add_file(self):
         try:
             self.file = self.download_queue.get(0)
+            self.download_progress.pack_forget()
+            self.download_progress.destroy()
             text = 'Open %s' % self.file
             self.file_button = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, self.file))
             self.results_label.pack_forget()
