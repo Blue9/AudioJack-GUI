@@ -24,6 +24,9 @@ class AudioJackGUI_v2(object):
         self.title = ttk.Label(self.mainframe, text='AudioJack', font=('Segoe UI Light', 24))
         self.title.pack()
         
+        self.url = ttk.Label(self.mainframe, text='Enter a YouTube or SoundCloud URL below.', font=self.font)
+        self.url.pack()
+        
         self.url_input = Text(self.mainframe, width=40, height=1, font=self.font, wrap=NONE)
         self.url_input.bind('<Return>', self.search)
         self.url_input.pack()
