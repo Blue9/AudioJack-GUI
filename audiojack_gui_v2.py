@@ -4,13 +4,16 @@ from functools import partial
 from threading import Thread
 import Queue
 
+from youtube_dl.utils import ExtractorError, DownloadError
+from musicbrainzngs.musicbrainz import NetworkError
+
 from Tkinter import *
 import ttk
 from PIL import Image, ImageTk
 from cStringIO import StringIO
 import audiojack
 
-audiojack.set_useragent('AudioJack-GUI v2', '0.1')
+audiojack.set_useragent('AudioJack-GUI v2', '0.2')
 
 class AudioJackGUI_v2(object):
     def __init__(self, master):
@@ -88,8 +91,10 @@ class AudioJackGUI_v2(object):
                 image_data = image_data.resize((200, 200), Image.ANTIALIAS)
                 images.append(ImageTk.PhotoImage(image=image_data))
             self.q.put([results, images])
-        except Exception:   # If the URL is invalid,
-            self.q.put(0)   # put 0 into the queue to indicate that the URL is invalid.
+        except (ExtractorError, DownloadError):   # If the URL is invalid,
+            self.q.put(-1)   # put -1 into the queue to indicate that the URL is invalid.
+        except NetworkError:
+            self.q.put(-2)
     
     def search(self, event=None):
         input = self.url_input.get(0.0, END).replace('\n', '')
@@ -108,7 +113,15 @@ class AudioJackGUI_v2(object):
             self.results_images = self.q.get(0)
             self.search_progress.pack_forget()
             self.search_progress.destroy()
-            if self.results_images != 0:    # If the URL is valid
+            if self.results_images == -1:    # If the URL is invalid
+                self.error = ttk.Label(self.mainframe, text='Error: Invalid URL', font=self.font, foreground='#ff0000')
+                self.error.pack()       # Create an error message
+                self.enable_search()    # Enable the search option again
+            elif self.results_images == -2:
+                self.error = ttk.Label(self.mainframe, text='Error: Network error', font=self.font, foreground='#ff0000')
+                self.error.pack()       # Create an error message
+                self.enable_search()    # Enable the search option again
+            else:
                 self.enable_search()
                 self.results = self.results_images[0]
                 self.images = self.results_images[1]
@@ -121,10 +134,6 @@ class AudioJackGUI_v2(object):
                     self.result.grid(column=i%4, row=i/4)
                 self.results_frame.pack()
                 self.create_custom_frame()
-            else:   #If the URL is invalid
-                self.error = ttk.Label(self.mainframe, text='Error: Invalid URL', font=self.font, foreground='#ff0000')
-                self.error.pack()       # Create an error message
-                self.enable_search()    # Enable the search option again
         except Queue.Empty:
             self.master.after(100, self.add_results)
     
