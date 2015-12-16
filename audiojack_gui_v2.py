@@ -101,11 +101,12 @@ class AudioJackGUI_v2(object):
         self.reset()
         self.q = Queue.Queue()
         t = Thread(target=self.get_results, args=[input])
+        t.daemon = True
         t.start()
         self.disable_search()
-        self.search_progress = ttk.Progressbar(length=200)
+        self.search_progress = ttk.Progressbar(length=200, mode='indeterminate')
         self.search_progress.pack()
-        self.search_progress.start(200)
+        self.search_progress.start(20)
         self.master.after(100, self.add_results)
     
     def add_results(self):
@@ -165,11 +166,12 @@ class AudioJackGUI_v2(object):
         self.reset()
         self.download_queue = Queue.Queue()
         t = Thread(target=self.get_file, args=[index, self.download_queue])
+        t.daemon = True
         t.start()
         self.disable_search()
-        self.download_progress = ttk.Progressbar(length=200)
+        self.download_progress = ttk.Progressbar(length=200, mode='indeterminate')
         self.download_progress.pack()
-        self.download_progress.start(200)
+        self.download_progress.start(20)
         self.master.after(100, self.add_file)
     
     def add_file(self):
