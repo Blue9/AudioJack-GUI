@@ -12,17 +12,17 @@ A smart YouTube-to-MP3 converter that automatically finds and adds ID3 tags (art
 ## Usage
 After installing necessary requirements, using the program is quite self-explanatory.
 
-0. Run `python audiojack_gui.py` or `python audiojack_gui_v2.py` (`v2` is preferred and more actively developed).
+1. Run `python audiojack_gui.py` or `python audiojack_gui_v2.py` (`v2` is preferred and more actively developed).
 ![Step 0](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%200.png)
-1. Paste a YouTube or SoundCloud URL in the search box and click on "Go!"
+2. Paste a YouTube or SoundCloud URL in the search box and click on "Go!"
 ![Step 1](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%201.png)
-2. Wait for about 10 seconds as the program loads.
+3. Wait for about 10 seconds as the program loads.
 ![Step 2](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%202.png)
-3. A grid of song titles, artists, and albums will appear.
+4. A grid of song titles, artists, and albums will appear.
 ![Step 3](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%203.png)
-4. Click on the metadata you wish to add to your downloaded MP3 file, or if none of them are correct, fill out the "Custom tags" form.
+5. Click on the metadata you wish to add to your downloaded MP3 file, or if none of them are correct, fill out the "Custom tags" form.
 ![Step 4](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%204.png)
-5. Voilà! The MP3 file will be in the same directory you ran the program from.
+6. Voilà! The MP3 file will be in the same directory you ran the program from.
 ![Step 5](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%205.png)
 
 ## Requirements
