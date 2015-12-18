@@ -24,3 +24,7 @@ After installing necessary requirements, using the program is quite self-explana
  - [mutagen](https://bitbucket.org/lazka/mutagen)
  - [musicbrainzngs v0.6.dev0](https://github.com/alastair/python-musicbrainzngs)
  - [youtube-dl](https://github.com/rg3/youtube-dl)
+
+## FAQ
+Why are there two versions?
+- I made `audiojack_gui.py` using `Tkinter` widgets. After realizing how ugly the native `Tkinter` widgets were, I decided to create a new version using `ttk` widgets, which use the native system UI. As of now, I plan to continue development on `audiojack_gui_v2.py`.
