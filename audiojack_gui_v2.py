@@ -13,7 +13,7 @@ from PIL import Image, ImageTk
 from cStringIO import StringIO
 import audiojack
 
-audiojack.set_useragent('AudioJack-GUI v2', '0.2')
+audiojack.set_useragent('AudioJack-GUI', '0.2.0')
 
 class AudioJackGUI_v2(object):
     def __init__(self, master):
@@ -204,6 +204,7 @@ class AudioJackGUI_v2(object):
         os.startfile(file)
 
 root = Tk()
-root.title('AudioJack-GUI v2')
+root.title('AudioJack-GUI v0.2.0')
+root.iconbitmap('AudioJack Icon.ico')
 app = AudioJackGUI_v2(root)
 root.mainloop()
