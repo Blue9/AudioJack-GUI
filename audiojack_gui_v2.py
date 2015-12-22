@@ -13,9 +13,9 @@ from PIL import Image, ImageTk
 from cStringIO import StringIO
 import audiojack
 
-audiojack.set_useragent('AudioJack-GUI', '0.2.0')
+audiojack.set_useragent('AudioJack-GUI', '0.3.0')
 
-class AudioJackGUI_v2(object):
+class AudioJackGUI(object):
     def __init__(self, master):
         self.master = master
         self.font = ('Segoe UI', 10)
@@ -32,6 +32,8 @@ class AudioJackGUI_v2(object):
         
         self.url_input = Text(self.mainframe, width=40, height=1, font=self.font, wrap=NONE)
         self.url_input.bind('<Return>', self.search)
+        self.url_input.bind('<Control-Key-a>', self.select_all)
+        self.url_input.bind('<Control-Key-A>', self.select_all)
         self.url_input.pack()
         
         self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
@@ -72,6 +74,12 @@ class AudioJackGUI_v2(object):
         except Exception:
             pass
     
+    def select_all(self, e):
+        self.url_input.tag_add(SEL, '1.0', END)
+        self.url_input.mark_set(INSERT, '1.0')
+        self.url_input.see(INSERT)
+        return 'break'
+    
     def disable_search(self):
         self.url_input.config(state=DISABLED)
         self.submit.config(state=DISABLED)
@@ -97,7 +105,7 @@ class AudioJackGUI_v2(object):
             self.q.put(-2)
     
     def search(self, event=None):
-        input = self.url_input.get(0.0, END).replace('\n', '')
+        input = self.url_input.get(0.0, END).replace('\n', '').replace(' ', '').replace('\t', '')
         self.reset()
         self.q = Queue.Queue()
         t = Thread(target=self.get_results, args=[input])
@@ -176,7 +184,7 @@ class AudioJackGUI_v2(object):
     
     def add_file(self):
         try:
-            self.file = self.download_queue.get(0)
+            self.file = self.download_queue.get(0).replace('/', '\\')
             self.enable_search()
             self.download_progress.pack_forget()
             self.download_progress.destroy()
@@ -195,7 +203,7 @@ class AudioJackGUI_v2(object):
         title = self.title_input.get(0.0, END).replace('\n', '')
         album = self.album_input.get(0.0, END).replace('\n', '')
         self.reset()
-        file = audiojack.custom(artist, title, album)
+        file = audiojack.custom(artist, title, album).replace('/', '\\')
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
@@ -204,7 +212,7 @@ class AudioJackGUI_v2(object):
         os.startfile(file)
 
 root = Tk()
-root.title('AudioJack-GUI v0.2.0')
+root.title('AudioJack-GUI v0.3.0')
 root.iconbitmap('AudioJack Icon.ico')
-app = AudioJackGUI_v2(root)
+app = AudioJackGUI(root)
 root.mainloop()
