@@ -21,8 +21,18 @@ class AudioJackGUI(object):
         self.font = ('Segoe UI', 10)
         
         self.master.minsize(width=1280, height=720)
-        self.mainframe = ttk.Frame(self.master)
-        self.mainframe.pack()
+        self.master.maxsize(width=1280, height=720)
+        
+        self.canvas = Canvas(self.master, bd=0, highlightthickness=0)
+        self.mainframe = ttk.Frame(self.canvas)
+        self.scrollbar = Scrollbar(self.master, orient='vertical', command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.pack(side=RIGHT, fill=Y)
+        self.canvas.pack(side=LEFT, fill=BOTH, expand=1)
+        self.canvas.create_window((640, 0), window=self.mainframe, anchor=N, tags='self.mainframe')
+        self.mainframe.bind('<Configure>', self.configure)
+        
+        self.canvas.bind_all('<MouseWheel>', self.scroll)
         
         self.title = ttk.Label(self.mainframe, text='AudioJack', font=('Segoe UI', 24))
         self.title.pack()
@@ -39,6 +49,13 @@ class AudioJackGUI(object):
         self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
         self.submit.pack()
     
+    def configure(self, e):
+        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+    
+    def scroll(self, e):
+        if self.mainframe.winfo_height() > 720:
+            self.canvas.yview_scroll(-1*(e.delta/30), 'units')
+    
     def reset(self):
         self.url_input.delete(0.0, END)
         self.url_input.config(state=NORMAL)
@@ -47,6 +64,12 @@ class AudioJackGUI(object):
         try:
             self.error.pack_forget()
             self.error.destroy()
+        except Exception:
+            pass
+        
+        try:
+            self.cancel.pack_forget()
+            self.cancel.destroy()
         except Exception:
             pass
         
@@ -90,21 +113,34 @@ class AudioJackGUI(object):
         self.submit.config(state=NORMAL)
         self.url_input.bind('<Return>', self.search)
     
+    def cancel_search(self):
+        self.cancel.configure(text='Please wait...')
+        global run
+        run = False
+    
     def get_results(self, input):
         try:
             results = audiojack.get_results(input)[:8]
             images = []
             for i, result in enumerate(results):
-                image_data = Image.open(StringIO(audiojack.get_cover_art_as_data(results[i][3]).decode('base64')))
-                image_data = image_data.resize((200, 200), Image.ANTIALIAS)
-                images.append(ImageTk.PhotoImage(image=image_data))
-            self.q.put([results, images])
+                if run:
+                    image_data = Image.open(StringIO(audiojack.get_cover_art_as_data(results[i][3]).decode('base64')))
+                    image_data = image_data.resize((200, 200), Image.ANTIALIAS)
+                    images.append(ImageTk.PhotoImage(image=image_data))
+                else:
+                    break
+            if run:
+                self.q.put([results, images])
+            else:
+                self.q.put(0)
         except (ExtractorError, DownloadError):   # If the URL is invalid,
             self.q.put(-1)   # put -1 into the queue to indicate that the URL is invalid.
         except NetworkError:
             self.q.put(-2)
     
     def search(self, event=None):
+        global run
+        run = True
         input = self.url_input.get(0.0, END).replace('\n', '').replace(' ', '').replace('\t', '')
         self.reset()
         self.q = Queue.Queue()
@@ -112,9 +148,11 @@ class AudioJackGUI(object):
         t.daemon = True
         t.start()
         self.disable_search()
-        self.search_progress = ttk.Progressbar(length=200, mode='indeterminate')
+        self.search_progress = ttk.Progressbar(self.mainframe, length=200, mode='indeterminate')
         self.search_progress.pack()
         self.search_progress.start(20)
+        self.cancel = ttk.Button(self.mainframe, text='Cancel', command=self.cancel_search)
+        self.cancel.pack()
         self.master.after(100, self.add_results)
     
     def add_results(self):
@@ -122,7 +160,11 @@ class AudioJackGUI(object):
             self.results_images = self.q.get(0)
             self.search_progress.pack_forget()
             self.search_progress.destroy()
-            if self.results_images == -1:    # If the URL is invalid
+            self.cancel.pack_forget()
+            self.cancel.destroy()
+            if self.results_images == 0:
+                self.reset()
+            elif self.results_images == -1:    # If the URL is invalid
                 self.error = ttk.Label(self.mainframe, text='Error: Invalid URL', font=self.font, foreground='#ff0000')
                 self.error.pack()       # Create an error message
                 self.enable_search()    # Enable the search option again
@@ -173,11 +215,11 @@ class AudioJackGUI(object):
     def download(self, index):
         self.reset()
         self.download_queue = Queue.Queue()
-        t = Thread(target=self.get_file, args=[index, self.download_queue])
-        t.daemon = True
-        t.start()
+        dl_t = Thread(target=self.get_file, args=[index, self.download_queue])
+        dl_t.daemon = True
+        dl_t.start()
         self.disable_search()
-        self.download_progress = ttk.Progressbar(length=200, mode='indeterminate')
+        self.download_progress = ttk.Progressbar(self.mainframe, length=200, mode='indeterminate')
         self.download_progress.pack()
         self.download_progress.start(20)
         self.master.after(100, self.add_file)
