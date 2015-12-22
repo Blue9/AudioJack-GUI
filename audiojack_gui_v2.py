@@ -11,6 +11,7 @@ from Tkinter import *
 import ttk
 from PIL import Image, ImageTk
 from cStringIO import StringIO
+import webbrowser
 import audiojack
 
 audiojack.set_useragent('AudioJack-GUI', '0.3.0')
@@ -28,9 +29,19 @@ class AudioJackGUI(object):
         self.scrollbar = Scrollbar(self.master, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side=RIGHT, fill=Y)
-        self.canvas.pack(side=LEFT, fill=BOTH, expand=1)
+        self.canvas.pack(side=TOP, fill=BOTH, expand=1)
         self.canvas.create_window((640, 0), window=self.mainframe, anchor=N, tags='self.mainframe')
         self.mainframe.bind('<Configure>', self.configure)
+        
+        self.footer = Frame(self.master, bg='#ddd')
+        self.credits = Label(self.footer, text='AudioJack v0.3.0', font=('Segoe UI', 14), bg='#ddd') # Use Tkinter label because ttk does not make it easy to change colors.
+        self.support_link = Label(self.footer, text='Support', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
+        self.support_link.bind('<Enter>', self.enter_link)
+        self.support_link.bind('<Button-1>', self.open_url)
+        self.support_link.bind('<Leave>', self.leave_link)
+        self.credits.pack(side=LEFT)
+        self.support_link.pack(side=RIGHT)
+        self.footer.pack(side=BOTTOM, fill=X)
         
         self.canvas.bind_all('<MouseWheel>', self.scroll)
         
@@ -55,6 +66,15 @@ class AudioJackGUI(object):
     def scroll(self, e):
         if self.mainframe.winfo_height() > 720:
             self.canvas.yview_scroll(-1*(e.delta/30), 'units')
+    
+    def enter_link(self, e):
+        self.support_link.configure(cursor='hand2', font=('Segoe UI', 14, 'underline'))
+    
+    def open_url(self, e):
+        webbrowser.open('http://blue9.github.io/AudioJack-GUI/', autoraise=True)
+    
+    def leave_link(self, e):
+        self.support_link.configure(cursor='arrow', font=('Segoe UI', 14))
     
     def reset(self):
         self.url_input.delete(0.0, END)
@@ -94,6 +114,12 @@ class AudioJackGUI(object):
         try:
             self.file.pack_forget()
             self.file.destroy()
+        except Exception:
+            pass
+        
+        try:
+            self.file_button.pack_forget()
+            self.file_button.destroy()
         except Exception:
             pass
     
