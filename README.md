@@ -5,14 +5,12 @@ A smart YouTube-to-MP3 converter that automatically finds and adds ID3 tags (art
 [Official website](http://blue9.github.io/AudioJack-GUI/)
 
 ## Screenshots
-![AudioJack-GUI v2 in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot_v2.png)
-
-![AudioJack-GUI in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot.png)
+![AudioJack-GUI in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot_v2.png)
 
 ## Usage
 After installing necessary requirements, using the program is quite self-explanatory.
 
-1. Run `python audiojack_gui.py` or `python audiojack_gui_v2.py` (`v2` is preferred and more actively developed).
+1. Run `python audiojack_gui.py`.
 ![Step 0](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%200.png)
 2. Paste a YouTube or SoundCloud URL in the search box and click on "Go!"
 ![Step 1](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/AudioJack%20Steps/Step%201.png)
@@ -33,7 +31,3 @@ After installing necessary requirements, using the program is quite self-explana
  - [mutagen](https://bitbucket.org/lazka/mutagen)
  - [musicbrainzngs v0.6.dev0](https://github.com/alastair/python-musicbrainzngs)
  - [youtube-dl](https://github.com/rg3/youtube-dl)
-
-## FAQ
-Why are there two versions?
-- I made `audiojack_gui.py` using `Tkinter` widgets. After realizing how ugly the native `Tkinter` widgets were, I decided to create a new version using `ttk` widgets, which use the native system UI. As of now, I plan to continue development on `audiojack_gui_v2.py`.
