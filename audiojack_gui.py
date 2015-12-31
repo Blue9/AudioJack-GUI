@@ -232,9 +232,18 @@ class AudioJackGUI(object):
         self.custom_frame.pack(pady=10)
     
     def get_file(self, index, download_queue):
-        file = audiojack.select(index)
-        download_queue.put(file)
-    
+        try:
+            file = audiojack.select(index)
+            download_queue.put(file)
+        except DownloadError as e:
+            if 'ffprobe' in str(e) or 'ffmpeg' in str(e): # Checks if the error is cause by ffmpeg not being installed
+                file = '%s/Downloads/%s.temp' % (os.path.expanduser('~'), audiojack.title) # Delete temp file
+                try:
+                    os.remove(file)
+                except Exception:
+                    pass
+                download_queue.put(0)
+
     def download(self, index):
         self.reset()
         self.download_queue = Queue.Queue()
@@ -249,17 +258,22 @@ class AudioJackGUI(object):
     
     def add_file(self):
         try:
-            self.file = self.download_queue.get(0).replace('/', '\\')
+            result = self.download_queue.get(0)
+            if result == 0:
+                self.error = ttk.Label(self.mainframe, text='Error: ffmpeg is not installed.', font=self.font, foreground='#ff0000')
+                self.error.pack()
+            else:
+                self.file = result.replace('/', '\\')
+                text = 'Open %s' % self.file
+                self.file_button = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, self.file))
+                self.file_button.pack()
             self.enable_search()
             self.download_progress.pack_forget()
             self.download_progress.destroy()
-            text = 'Open %s' % self.file
-            self.file_button = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, self.file))
             self.results_label.pack_forget()
             self.results_label.destroy()
             self.results_frame.pack_forget()
             self.results_frame.destroy()
-            self.file_button.pack()
         except Queue.Empty:
             self.master.after(100, self.add_file)
     
