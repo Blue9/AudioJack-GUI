@@ -1,12 +1,9 @@
 import os
 from functools import partial
-
 from threading import Thread
 import Queue
-
 from youtube_dl.utils import ExtractorError, DownloadError
 from musicbrainzngs.musicbrainz import NetworkError
-
 from Tkinter import *
 import ttk
 from PIL import Image, ImageTk
