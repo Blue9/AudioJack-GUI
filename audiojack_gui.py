@@ -5,13 +5,14 @@ import Queue
 from youtube_dl.utils import ExtractorError, DownloadError
 from musicbrainzngs.musicbrainz import NetworkError
 from Tkinter import *
+import tkFileDialog
 import ttk
 from PIL import Image, ImageTk
 from cStringIO import StringIO
 import webbrowser
 import audiojack
 
-audiojack.set_useragent('AudioJack-GUI', '0.3.0')
+audiojack.set_useragent('AudioJack-GUI', '0.4.0')
 
 class AudioJackGUI(object):
     def __init__(self, master):
@@ -31,7 +32,7 @@ class AudioJackGUI(object):
         self.mainframe.bind('<Configure>', self.configure)
         
         self.footer = Frame(self.master, bg='#ddd')
-        self.credits = Label(self.footer, text='AudioJack v0.3.0', font=('Segoe UI', 14), bg='#ddd') # Use Tkinter label because ttk does not make it easy to change colors.
+        self.credits = Label(self.footer, text='AudioJack v0.4.0', font=('Segoe UI', 14), bg='#ddd') # Use Tkinter label because ttk does not make it easy to change colors.
         self.support_link = Label(self.footer, text='Support', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
         self.support_link.bind('<Enter>', self.enter_link)
         self.support_link.bind('<Button-1>', self.open_url)
@@ -220,6 +221,8 @@ class AudioJackGUI(object):
         self.title_input = Text(self.custom_frame, width=20, height=1, font=self.font)
         self.album_label = ttk.Label(self.custom_frame, text='Album: ')
         self.album_input = Text(self.custom_frame, width=20, height=1, font=self.font)
+        self.cover_art = ttk.Button(self.custom_frame, text='Browse for cover art', command=self.cover_art_browse)
+        self.cover_art_path = Entry(self.custom_frame, width=20, font=self.font)
         self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags', command=self.custom)
         self.custom_title.grid(row=0, columnspan=2)
         self.artist_label.grid(column=0, row=1)
@@ -228,8 +231,15 @@ class AudioJackGUI(object):
         self.title_input.grid(column=1, row=2)
         self.album_label.grid(column=0, row=3)
         self.album_input.grid(column=1, row=3)
-        self.custom_submit.grid(row=4, columnspan=2, sticky=EW, pady=10)
+        self.cover_art.grid(column=0, row=4)
+        self.cover_art_path.grid(column=1, row=4)
+        self.custom_submit.grid(row=5, columnspan=2, sticky=EW, pady=10)
         self.custom_frame.pack(pady=10)
+    
+    def cover_art_browse(self):
+        image = tkFileDialog.askopenfilename(initialdir=os.path.expanduser('~'), parent=root, filetypes=[('JPEG files','*.jpg')])
+        self.cover_art_path.delete(0, END)
+        self.cover_art_path.insert(0, image)
     
     def get_file(self, index, download_queue):
         try:
@@ -281,8 +291,10 @@ class AudioJackGUI(object):
         artist = self.artist_input.get(0.0, END).replace('\n', '')
         title = self.title_input.get(0.0, END).replace('\n', '')
         album = self.album_input.get(0.0, END).replace('\n', '')
+        cover_art = self.cover_art_path.get().replace('\n', '')
+        print cover_art
         self.reset()
-        file = audiojack.custom(artist, title, album).replace('/', '\\')
+        file = audiojack.custom(artist, title, album, cover_art).replace('/', '\\')
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
@@ -291,7 +303,7 @@ class AudioJackGUI(object):
         os.startfile(file)
 
 root = Tk()
-root.title('AudioJack-GUI v0.3.0')
+root.title('AudioJack-GUI v0.4.0')
 root.iconbitmap('AudioJack Icon.ico')
 app = AudioJackGUI(root)
 root.mainloop()
