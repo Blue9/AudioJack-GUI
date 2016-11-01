@@ -19,8 +19,7 @@ class AudioJackGUI(object):
         self.master = master
         self.font = ('Segoe UI', 10)
         
-        self.master.minsize(width=1280, height=720)
-        self.master.maxsize(width=1280, height=720)
+        self.master.minsize(width=1000, height=600)
         
         self.canvas = Canvas(self.master, bd=0, highlightthickness=0)
         self.mainframe = ttk.Frame(self.canvas)
@@ -28,7 +27,7 @@ class AudioJackGUI(object):
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side=RIGHT, fill=Y)
         self.canvas.pack(side=TOP, fill=BOTH, expand=1)
-        self.canvas.create_window((640, 0), window=self.mainframe, anchor=N, tags='self.mainframe')
+        self.canvas.create_window((0, 0), window=self.mainframe, anchor=N, tags='self.mainframe')
         self.mainframe.bind('<Configure>', self.configure)
         
         self.footer = Frame(self.master, bg='#ddd')
@@ -50,6 +49,7 @@ class AudioJackGUI(object):
         self.url.pack()
         
         self.url_input = Text(self.mainframe, width=40, height=1, font=self.font, wrap=NONE)
+        self.url_input.bind("<Tab>", focus_next_window)
         self.url_input.bind('<Return>', self.search)
         self.url_input.bind('<Control-Key-a>', self.select_all)
         self.url_input.bind('<Control-Key-A>', self.select_all)
@@ -120,7 +120,37 @@ class AudioJackGUI(object):
             self.file_button.destroy()
         except Exception:
             pass
-    
+        
+        try:
+            self.start_time_label.pack_forget()
+            self.start_time_label.destroy()
+        except Exception:
+            pass
+        
+        try:
+            self.start_time_input.pack_forget()
+            self.start_time_input.destroy()
+        except Exception:
+            pass     
+            
+        try:
+            self.end_time_label.pack_forget()
+            self.end_time_label.destroy()
+        except Exception:
+            pass    
+            
+        try:
+            self.end_time_input.pack_forget()
+            self.end_time_input.destroy()
+        except Exception:
+            pass 
+            
+        try:
+            self.cut_button.pack_forget()
+            self.cut_button.destroy()
+        except Exception:
+            pass         
+ 
     def select_all(self, e):
         self.url_input.tag_add(SEL, '1.0', END)
         self.url_input.mark_set(INSERT, '1.0')
@@ -217,10 +247,13 @@ class AudioJackGUI(object):
         self.custom_title = ttk.Label(self.custom_frame, text='Custom tags:')
         self.artist_label = ttk.Label(self.custom_frame, text='Artist: ')
         self.artist_input = Text(self.custom_frame, width=20, height=1, font=self.font)
+        self.artist_input.bind("<Tab>", focus_next_window)
         self.title_label = ttk.Label(self.custom_frame, text='Title: ')
         self.title_input = Text(self.custom_frame, width=20, height=1, font=self.font)
+        self.title_input.bind("<Tab>", focus_next_window)
         self.album_label = ttk.Label(self.custom_frame, text='Album: ')
         self.album_input = Text(self.custom_frame, width=20, height=1, font=self.font)
+        self.album_input.bind("<Tab>", focus_next_window)
         self.cover_art = ttk.Button(self.custom_frame, text='Browse for cover art', command=self.cover_art_browse)
         self.cover_art_path = Entry(self.custom_frame, width=20, font=self.font)
         self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags', command=self.custom)
@@ -276,7 +309,21 @@ class AudioJackGUI(object):
                 self.file = result.replace('/', '\\')
                 text = 'Open %s' % self.file
                 self.file_button = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, self.file))
+                
                 self.file_button.pack()
+                self.start_time_label = ttk.Label(self.mainframe, text='Start time: ')
+                self.start_time_label.pack()
+                self.start_time_input = Text(self.mainframe, width=20, height=1, font=self.font)
+                self.start_time_input.bind("<Tab>", focus_next_window)
+                self.start_time_input.pack()
+                self.end_time_label = ttk.Label(self.mainframe, text='End time: ')
+                self.end_time_label.pack()
+                self.end_time_input = Text(self.mainframe, width=20, height=1, font=self.font)
+                self.end_time_input.bind("<Tab>", focus_next_window)
+                self.end_time_input.pack()
+                self.cut_button = ttk.Button(self.mainframe, text="Cut File", command=self.cut)
+                self.cut_button.pack()
+            
             self.enable_search()
             self.download_progress.pack_forget()
             self.download_progress.destroy()
@@ -301,6 +348,22 @@ class AudioJackGUI(object):
     
     def open_file(self, file):
         os.startfile(file)
+        
+    def cut(self):
+        """ Cut the mp3 file """
+        self.file_button.config(state=DISABLED)
+        self.cut_button.config(state=DISABLED)
+        start_time = self.start_time_input.get(0.0, END).replace('\n', '')
+        end_time = self.end_time_input.get(0.0, END).replace('\n', '')
+        self.master.update_idletasks()
+        audiojack.cut_file(self.file, start_time, end_time)
+        self.file_button.config(state=NORMAL)
+        self.cut_button.config(state=NORMAL)
+
+def focus_next_window(event):
+    """ Focus next element """
+    event.widget.tk_focusNext().focus()
+    return("break")
 
 root = Tk()
 root.title('AudioJack-GUI v0.4.0')
