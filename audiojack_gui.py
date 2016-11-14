@@ -1,21 +1,27 @@
-import os
-from functools import partial
-from threading import Thread
 import Queue
-from youtube_dl.utils import ExtractorError, DownloadError
-from musicbrainzngs.musicbrainz import NetworkError
-from Tkinter import *
+import os
 import tkFileDialog
 import ttk
-from PIL import Image, ImageTk
-from cStringIO import StringIO
 import webbrowser
+from Tkinter import *
+from cStringIO import StringIO
+from functools import partial
+from threading import Thread
+
+import pyperclip
+from PIL import Image, ImageTk
+from musicbrainzngs.musicbrainz import NetworkError
+from youtube_dl.utils import ExtractorError, DownloadError
+
 import audiojack
 
 audiojack.set_useragent('AudioJack-GUI', '0.4.0')
 
+
 class AudioJackGUI(object):
     def __init__(self, master):
+        self.stop_cb_check = True
+
         self.master = master
         self.font = ('Segoe UI', 10)
         
@@ -32,7 +38,8 @@ class AudioJackGUI(object):
         self.canvas.pack(side=TOP, fill=BOTH, expand=1)
 
         self.footer = Frame(self.master, bg='#ddd')
-        self.credits = Label(self.footer, text='AudioJack v0.4.0', font=('Segoe UI', 14), bg='#ddd') # Use Tkinter label because ttk does not make it easy to change colors.
+        self.credits = Label(self.footer, text='AudioJack v0.4.0', font=('Segoe UI', 14),
+                             bg='#ddd')  # Use Tkinter label because ttk does not make it easy to change colors.
         self.support_link = Label(self.footer, text='Support', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
         self.support_link.bind('<Enter>', self.enter_link)
         self.support_link.bind('<Button-1>', self.open_url)
@@ -40,28 +47,32 @@ class AudioJackGUI(object):
         self.credits.pack(side=LEFT)
         self.support_link.pack(side=RIGHT)
         self.footer.pack(side=BOTTOM, fill=X)
-        
+
         self.canvas.bind_all('<MouseWheel>', self.scroll)
-        
+
         self.title = ttk.Label(self.mainframe, text='AudioJack', font=('Segoe UI', 24))
         self.title.pack()
-        
+
         self.url = ttk.Label(self.mainframe, text='Enter a YouTube or SoundCloud URL below.', font=self.font)
         self.url.pack()
-        
+
         self.url_input = Text(self.mainframe, width=40, height=1, font=self.font, wrap=NONE)
         self.url_input.bind("<Tab>", focus_next_window)
         self.url_input.bind('<Return>', self.search)
         self.url_input.bind('<Control-Key-a>', self.select_all)
         self.url_input.bind('<Control-Key-A>', self.select_all)
         self.url_input.pack()
-        
+
         self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
         self.submit.pack()
-    
+
+        self.new_cb = ""
+        self.old_cb = pyperclip.paste()
+        self.stop_cb_check = False
+
     def configure(self, e):
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
-    
+
     def scroll(self, e):
         # TODO: Fix scrolling
         if self.mainframe.winfo_height() > self.master.winfo_height():
@@ -69,10 +80,10 @@ class AudioJackGUI(object):
     
     def enter_link(self, e):
         self.support_link.configure(cursor='hand2', font=('Segoe UI', 14, 'underline'))
-    
+
     def open_url(self, e):
         webbrowser.open('http://blue9.github.io/AudioJack-GUI/', autoraise=True)
-    
+
     def leave_link(self, e):
         self.support_link.configure(cursor='arrow', font=('Segoe UI', 14))
 
@@ -81,22 +92,22 @@ class AudioJackGUI(object):
         self.url_input.mark_set(INSERT, '1.0')
         self.url_input.see(INSERT)
         return 'break'
-    
+
     def disable_search(self):
         self.url_input.config(state=DISABLED)
         self.submit.config(state=DISABLED)
         self.url_input.unbind('<Return>')
-    
+
     def enable_search(self):
         self.url_input.config(state=NORMAL)
         self.submit.config(state=NORMAL)
         self.url_input.bind('<Return>', self.search)
-    
+
     def cancel_search(self):
         self.cancel.configure(text='Please wait...')
         global run
         run = False
-    
+
     def get_results(self, input):
         try:
             results = audiojack.get_results(input)[:8]
@@ -112,11 +123,11 @@ class AudioJackGUI(object):
                 self.q.put([results, images])
             else:
                 self.q.put(0)
-        except (ExtractorError, DownloadError):   # If the URL is invalid,
-            self.q.put(-1)   # put -1 into the queue to indicate that the URL is invalid.
+        except (ExtractorError, DownloadError):  # If the URL is invalid,
+            self.q.put(-1)  # put -1 into the queue to indicate that the URL is invalid.
         except NetworkError:
             self.q.put(-2)
-    
+
     def search(self, event=None):
         global run
         run = True
@@ -133,7 +144,7 @@ class AudioJackGUI(object):
         self.cancel = ttk.Button(self.mainframe, text='Cancel', command=self.cancel_search)
         self.cancel.pack()
         self.master.after(100, self.add_results)
-    
+
     def add_results(self):
         try:
             self.results_images = self.q.get(0)
@@ -143,14 +154,15 @@ class AudioJackGUI(object):
             self.cancel.destroy()
             if self.results_images == 0:
                 self.reset()
-            elif self.results_images == -1:    # If the URL is invalid
+            elif self.results_images == -1:  # If the URL is invalid
                 self.error = ttk.Label(self.mainframe, text='Error: Invalid URL', font=self.font, foreground='#ff0000')
-                self.error.pack()       # Create an error message
-                self.enable_search()    # Enable the search option again
+                self.error.pack()  # Create an error message
+                self.enable_search()  # Enable the search option again
             elif self.results_images == -2:
-                self.error = ttk.Label(self.mainframe, text='Error: Network error', font=self.font, foreground='#ff0000')
-                self.error.pack()       # Create an error message
-                self.enable_search()    # Enable the search option again
+                self.error = ttk.Label(self.mainframe, text='Error: Network error', font=self.font,
+                                       foreground='#ff0000')
+                self.error.pack()  # Create an error message
+                self.enable_search()  # Enable the search option again
             else:
                 self.enable_search()
                 self.results = self.results_images[0]
@@ -166,7 +178,7 @@ class AudioJackGUI(object):
                 self.create_custom_frame()
         except Queue.Empty:
             self.master.after(100, self.add_results)
-    
+
     def create_custom_frame(self):
         self.custom_frame = ttk.Frame(self.mainframe)
         self.custom_title = ttk.Label(self.custom_frame, text='Custom tags:')
@@ -193,9 +205,10 @@ class AudioJackGUI(object):
         self.cover_art_path.grid(column=1, row=4)
         self.custom_submit.grid(row=5, columnspan=2, sticky=EW, pady=10)
         self.custom_frame.pack(pady=10)
-    
+
     def cover_art_browse(self):
-        image = tkFileDialog.askopenfilename(initialdir=os.path.expanduser('~'), parent=root, filetypes=[('JPEG files','*.jpg')])
+        image = tkFileDialog.askopenfilename(initialdir=os.path.expanduser('~'), parent=root,
+                                             filetypes=[('JPEG files', '*.jpg')])
         self.cover_art_path.delete(0, END)
         self.cover_art_path.insert(0, image)
     
@@ -204,8 +217,8 @@ class AudioJackGUI(object):
             file = audiojack.select(entry)
             download_queue.put(file)
         except DownloadError as e:
-            if 'ffprobe' in str(e) or 'ffmpeg' in str(e): # Checks if the error is cause by ffmpeg not being installed
-                file = '%s/Downloads/%s.temp' % (os.path.expanduser('~'), audiojack.title) # Delete temp file
+            if 'ffprobe' in str(e) or 'ffmpeg' in str(e):  # Checks if the error is cause by ffmpeg not being installed
+                file = '%s/Downloads/%s.temp' % (os.path.expanduser('~'), audiojack.title)  # Delete temp file
                 try:
                     os.remove(file)
                 except Exception:
@@ -223,18 +236,19 @@ class AudioJackGUI(object):
         self.download_progress.pack()
         self.download_progress.start(20)
         self.master.after(100, self.add_file)
-    
+
     def add_file(self):
         try:
             result = self.download_queue.get(0)
             if result == 0:
-                self.error = ttk.Label(self.mainframe, text='Error: ffmpeg is not installed.', font=self.font, foreground='#ff0000')
+                self.error = ttk.Label(self.mainframe, text='Error: ffmpeg is not installed.', font=self.font,
+                                       foreground='#ff0000')
                 self.error.pack()
             else:
                 self.file = result.replace('/', '\\')
                 text = 'Open %s' % self.file
                 self.file_button = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, self.file))
-                
+
                 self.file_button.pack()
                 self.start_time_label = ttk.Label(self.mainframe, text='Start time: ')
                 self.start_time_label.pack()
@@ -248,7 +262,7 @@ class AudioJackGUI(object):
                 self.end_time_input.pack()
                 self.cut_button = ttk.Button(self.mainframe, text="Cut File", command=self.cut)
                 self.cut_button.pack()
-            
+
             self.enable_search()
             self.download_progress.pack_forget()
             self.download_progress.destroy()
@@ -258,7 +272,7 @@ class AudioJackGUI(object):
             self.results_frame.destroy()
         except Queue.Empty:
             self.master.after(100, self.add_file)
-    
+
     def custom(self):
         entry = {
             'artist': self.artist_input.get(0.0, END).replace('\n', ''),
@@ -271,10 +285,10 @@ class AudioJackGUI(object):
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
-    
+
     def open_file(self, file):
         os.startfile(file)
-        
+
     def cut(self):
         """ Cut the mp3 file """
         self.file_button.config(state=DISABLED)
@@ -285,7 +299,7 @@ class AudioJackGUI(object):
         audiojack.cut_file(self.file, start_time, end_time)
         self.file_button.config(state=NORMAL)
         self.cut_button.config(state=NORMAL)
-    
+
     def reset(self):
         self.url_input.delete(0.0, END)
         self.url_input.config(state=NORMAL)
@@ -368,8 +382,33 @@ def focus_next_window(event):
     event.widget.tk_focusNext().focus()
     return("break")
 
+
 root = Tk()
 root.title('AudioJack-GUI v0.4.0')
 root.iconbitmap('AudioJack Icon.ico')
 app = AudioJackGUI(root)
+
+
+def is_url(strg):
+    if strg.startswith("http://") \
+            or strg.startswith("https://") \
+            or strg.startswith("www.") \
+            or strg.startswith("youtu"):  # This allows for short links (eg $scheme://youtu.be/$id) and normal urls
+        return True
+    else:
+        return False
+
+
+def check_cb():
+    if not app.stop_cb_check:
+        app.new_cb = pyperclip.paste()
+        if not (app.new_cb is app.old_cb):
+            app.old_cb = app.new_cb
+            if is_url(app.old_cb):
+                app.url_input.delete(0.0, END)
+                app.url_input.insert(INSERT, app.old_cb)
+    root.after(1000, check_cb)
+
+
+root.after(5000, check_cb)
 root.mainloop()
