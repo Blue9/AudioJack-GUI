@@ -341,7 +341,7 @@ class AudioJackGUI(object):
         cover_art = self.cover_art_path.get().replace('\n', '')
         print cover_art
         self.reset()
-        file = audiojack.custom(artist, title, album, cover_art).replace('/', '\\')
+        file = audiojack.custom(artist=artist, custom_title=title, album=album, cover_art=cover_art).replace('/', '\\')
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
