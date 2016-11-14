@@ -33,3 +33,4 @@ After installing necessary requirements, using the program is quite self-explana
  - [mutagen](https://bitbucket.org/lazka/mutagen)
  - [musicbrainzngs v0.6.dev0](https://github.com/alastair/python-musicbrainzngs)
  - [youtube-dl](https://github.com/rg3/youtube-dl)
+ - [pyperclip](https://github.com/asweigart/pyperclip)
