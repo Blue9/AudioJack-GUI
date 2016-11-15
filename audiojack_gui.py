@@ -19,17 +19,18 @@ class AudioJackGUI(object):
         self.master = master
         self.font = ('Segoe UI', 10)
         
-        self.master.minsize(width=1000, height=600)
+        self.master.minsize(width=800, height=600)
         
         self.canvas = Canvas(self.master, bd=0, highlightthickness=0)
         self.mainframe = ttk.Frame(self.canvas)
         self.scrollbar = Scrollbar(self.master, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side=RIGHT, fill=Y)
-        self.canvas.pack(side=TOP, fill=BOTH, expand=1)
         self.canvas.create_window((0, 0), window=self.mainframe, anchor=N, tags='self.mainframe')
         self.mainframe.bind('<Configure>', self.configure)
-        
+        self.mainframe.pack(side=TOP, fill=X)
+        self.canvas.pack(side=TOP, fill=BOTH, expand=1)
+
         self.footer = Frame(self.master, bg='#ddd')
         self.credits = Label(self.footer, text='AudioJack v0.4.0', font=('Segoe UI', 14), bg='#ddd') # Use Tkinter label because ttk does not make it easy to change colors.
         self.support_link = Label(self.footer, text='Support', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
@@ -62,7 +63,8 @@ class AudioJackGUI(object):
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
     
     def scroll(self, e):
-        if self.mainframe.winfo_height() > 720:
+        # TODO: Fix scrolling
+        if self.mainframe.winfo_height() > self.master.winfo_height():
             self.canvas.yview_scroll(-1*(e.delta/30), 'units')
     
     def enter_link(self, e):
@@ -73,84 +75,7 @@ class AudioJackGUI(object):
     
     def leave_link(self, e):
         self.support_link.configure(cursor='arrow', font=('Segoe UI', 14))
-    
-    def reset(self):
-        self.url_input.delete(0.0, END)
-        self.url_input.config(state=NORMAL)
-        self.submit.config(state=NORMAL)
-        
-        try:
-            self.error.pack_forget()
-            self.error.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.cancel.pack_forget()
-            self.cancel.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.results_label.pack_forget()
-            self.results_label.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.results_frame.pack_forget()
-            self.results_frame.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.custom_frame.pack_forget()
-            self.custom_frame.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.file.pack_forget()
-            self.file.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.file_button.pack_forget()
-            self.file_button.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.start_time_label.pack_forget()
-            self.start_time_label.destroy()
-        except Exception:
-            pass
-        
-        try:
-            self.start_time_input.pack_forget()
-            self.start_time_input.destroy()
-        except Exception:
-            pass     
-            
-        try:
-            self.end_time_label.pack_forget()
-            self.end_time_label.destroy()
-        except Exception:
-            pass    
-            
-        try:
-            self.end_time_input.pack_forget()
-            self.end_time_input.destroy()
-        except Exception:
-            pass 
-            
-        try:
-            self.cut_button.pack_forget()
-            self.cut_button.destroy()
-        except Exception:
-            pass         
- 
+
     def select_all(self, e):
         self.url_input.tag_add(SEL, '1.0', END)
         self.url_input.mark_set(INSERT, '1.0')
@@ -178,7 +103,7 @@ class AudioJackGUI(object):
             images = []
             for i, result in enumerate(results):
                 if run:
-                    image_data = Image.open(StringIO(audiojack.get_cover_art_as_data(results[i][3]).decode('base64')))
+                    image_data = Image.open(StringIO(audiojack.get_cover_art_as_data(results[i]['id']).decode('base64')))
                     image_data = image_data.resize((200, 200), Image.ANTIALIAS)
                     images.append(ImageTk.PhotoImage(image=image_data))
                 else:
@@ -234,8 +159,8 @@ class AudioJackGUI(object):
                 self.results_label = ttk.Label(self.mainframe, text='Results:', font=self.font)
                 self.results_label.pack()
                 for i, result in enumerate(self.results):
-                    text = '%s\n%s\n%s' % (result[0], result[1], result[2])
-                    self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP, command=partial(self.download, i))
+                    text = '%s\n%s\n%s' % (result['title'], result['artist'], result['album'])
+                    self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP, command=partial(self.download, result))
                     self.result.grid(column=i%4, row=i/4)
                 self.results_frame.pack()
                 self.create_custom_frame()
@@ -274,9 +199,9 @@ class AudioJackGUI(object):
         self.cover_art_path.delete(0, END)
         self.cover_art_path.insert(0, image)
     
-    def get_file(self, index, download_queue):
+    def get_file(self, entry, download_queue):
         try:
-            file = audiojack.select(index)
+            file = audiojack.select(entry)
             download_queue.put(file)
         except DownloadError as e:
             if 'ffprobe' in str(e) or 'ffmpeg' in str(e): # Checks if the error is cause by ffmpeg not being installed
@@ -287,10 +212,10 @@ class AudioJackGUI(object):
                     pass
                 download_queue.put(0)
 
-    def download(self, index):
+    def download(self, entry):
         self.reset()
         self.download_queue = Queue.Queue()
-        dl_t = Thread(target=self.get_file, args=[index, self.download_queue])
+        dl_t = Thread(target=self.get_file, args=[entry, self.download_queue])
         dl_t.daemon = True
         dl_t.start()
         self.disable_search()
@@ -335,13 +260,14 @@ class AudioJackGUI(object):
             self.master.after(100, self.add_file)
     
     def custom(self):
-        artist = self.artist_input.get(0.0, END).replace('\n', '')
-        title = self.title_input.get(0.0, END).replace('\n', '')
-        album = self.album_input.get(0.0, END).replace('\n', '')
-        cover_art = self.cover_art_path.get().replace('\n', '')
-        print cover_art
+        entry = {
+            'artist': self.artist_input.get(0.0, END).replace('\n', ''),
+            'title': self.title_input.get(0.0, END).replace('\n', ''),
+            'album': self.album_input.get(0.0, END).replace('\n', ''),
+            'cover_art': self.cover_art_path.get().replace('\n', '')
+        }
         self.reset()
-        file = audiojack.custom(artist=artist, custom_title=title, album=album, cover_art=cover_art).replace('/', '\\')
+        file = audiojack.select(artist=artist, custom_title=title, album=album, cover_art=cover_art).replace('/', '\\')
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
@@ -359,6 +285,83 @@ class AudioJackGUI(object):
         audiojack.cut_file(self.file, start_time, end_time)
         self.file_button.config(state=NORMAL)
         self.cut_button.config(state=NORMAL)
+    
+    def reset(self):
+        self.url_input.delete(0.0, END)
+        self.url_input.config(state=NORMAL)
+        self.submit.config(state=NORMAL)
+
+        try:
+            self.error.pack_forget()
+            self.error.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.cancel.pack_forget()
+            self.cancel.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.results_label.pack_forget()
+            self.results_label.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.results_frame.pack_forget()
+            self.results_frame.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.custom_frame.pack_forget()
+            self.custom_frame.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.file.pack_forget()
+            self.file.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.file_button.pack_forget()
+            self.file_button.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.start_time_label.pack_forget()
+            self.start_time_label.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.start_time_input.pack_forget()
+            self.start_time_input.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.end_time_label.pack_forget()
+            self.end_time_label.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.end_time_input.pack_forget()
+            self.end_time_input.destroy()
+        except Exception:
+            pass
+
+        try:
+            self.cut_button.pack_forget()
+            self.cut_button.destroy()
+        except Exception:
+            pass
 
 def focus_next_window(event):
     """ Focus next element """
