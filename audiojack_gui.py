@@ -9,8 +9,10 @@ from functools import partial
 from threading import Thread
 
 import pyperclip
+import validators
 from PIL import Image, ImageTk
 from musicbrainzngs.musicbrainz import NetworkError
+from validators import ValidationFailure
 from youtube_dl.utils import ExtractorError, DownloadError
 
 import audiojack
@@ -390,12 +392,9 @@ app = AudioJackGUI(root)
 
 
 def is_url(strg):
-    if strg.startswith("http://") \
-            or strg.startswith("https://") \
-            or strg.startswith("www.") \
-            or strg.startswith("youtu"):  # This allows for short links (eg $scheme://youtu.be/$id) and normal urls
-        return True
-    else:
+    try:
+        return validators.url(strg)
+    except ValidationFailure:
         return False
 
 
