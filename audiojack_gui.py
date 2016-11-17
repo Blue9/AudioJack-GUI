@@ -116,7 +116,7 @@ class AudioJackGUI(object):
             images = []
             for i, result in enumerate(results):
                 if run:
-                    image_data = Image.open(StringIO(audiojack.get_cover_art_as_data(results[i]['id']).decode('base64')))
+                    image_data = Image.open(StringIO(results[i]['img'].decode('base64')))
                     image_data = image_data.resize((200, 200), Image.ANTIALIAS)
                     images.append(ImageTk.PhotoImage(image=image_data))
                 else:
@@ -177,11 +177,11 @@ class AudioJackGUI(object):
                     self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP, command=partial(self.download, result))
                     self.result.grid(column=i%4, row=i/4)
                 self.results_frame.pack()
-                self.create_custom_frame()
+                self.create_custom_frame(result['url'])
         except Queue.Empty:
             self.master.after(100, self.add_results)
 
-    def create_custom_frame(self):
+    def create_custom_frame(self, url):
         self.custom_frame = ttk.Frame(self.mainframe)
         self.custom_title = ttk.Label(self.custom_frame, text='Custom tags:')
         self.artist_label = ttk.Label(self.custom_frame, text='Artist: ')
@@ -195,7 +195,7 @@ class AudioJackGUI(object):
         self.album_input.bind("<Tab>", focus_next_window)
         self.cover_art = ttk.Button(self.custom_frame, text='Browse for cover art', command=self.cover_art_browse)
         self.cover_art_path = Entry(self.custom_frame, width=20, font=self.font)
-        self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags', command=self.custom)
+        self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags', command=partial(self.custom, url))
         self.custom_title.grid(row=0, columnspan=2)
         self.artist_label.grid(column=0, row=1)
         self.artist_input.grid(column=1, row=1)
@@ -275,13 +275,18 @@ class AudioJackGUI(object):
         except Queue.Empty:
             self.master.after(100, self.add_file)
 
-    def custom(self):
+    def custom(self, url):
         entry = {
             'artist': self.artist_input.get(0.0, END).replace('\n', ''),
             'title': self.title_input.get(0.0, END).replace('\n', ''),
             'album': self.album_input.get(0.0, END).replace('\n', ''),
-            'cover_art': self.cover_art_path.get().replace('\n', '')
+            'url': url
         }
+        try:
+            with open(self.cover_art_path.get().replace('\n', ''), 'rb') as file:
+                entry['img'] = file.read().encode('base64')
+        except IOError:
+            print 'File not found'
         self.reset()
         file = audiojack.select(entry).replace('/', '\\')
         text = 'Open %s' % file
