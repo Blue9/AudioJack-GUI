@@ -35,3 +35,15 @@ After installing necessary requirements, using the program is quite self-explana
  - [youtube-dl](https://github.com/rg3/youtube-dl)
  - [pyperclip](https://github.com/asweigart/pyperclip)
  - [validators](https://validators.readthedocs.io/en/latest/)
+
+## Contribution:
+- Contributing to this project is highly encouraged.
+
+### Guidelines:
+1. Use single-quotes for string literals.
+2. If you use any additional modules, please update the [requirements](#requirements) if necessary.
+3. Thoroughly test the program before pushing.
+
+*More guidelines will be added if necessary.*
+
+**Note:** Please only modify `audiojack_gui.py` and **not** `audiojack_gui_beta.py`. Any pull requests for `audiojack_gui_beta.py` will be rejected.
