@@ -59,7 +59,7 @@ class AudioJackGUI(object):
         self.url.pack()
 
         self.url_input = Text(self.mainframe, width=40, height=1, font=self.font, wrap=NONE)
-        self.url_input.bind("<Tab>", focus_next_window)
+        self.url_input.bind('<Tab>', focus_next_window)
         self.url_input.bind('<Return>', self.search)
         self.url_input.bind('<Control-Key-a>', self.select_all)
         self.url_input.bind('<Control-Key-A>', self.select_all)
@@ -68,7 +68,7 @@ class AudioJackGUI(object):
         self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
         self.submit.pack()
 
-        self.new_cb = ""
+        self.new_cb = ''
         self.old_cb = pyperclip.paste()
         self.stop_cb_check = False
 
@@ -186,13 +186,13 @@ class AudioJackGUI(object):
         self.custom_title = ttk.Label(self.custom_frame, text='Custom tags:')
         self.artist_label = ttk.Label(self.custom_frame, text='Artist: ')
         self.artist_input = Text(self.custom_frame, width=20, height=1, font=self.font)
-        self.artist_input.bind("<Tab>", focus_next_window)
+        self.artist_input.bind('<Tab>', focus_next_window)
         self.title_label = ttk.Label(self.custom_frame, text='Title: ')
         self.title_input = Text(self.custom_frame, width=20, height=1, font=self.font)
-        self.title_input.bind("<Tab>", focus_next_window)
+        self.title_input.bind('<Tab>', focus_next_window)
         self.album_label = ttk.Label(self.custom_frame, text='Album: ')
         self.album_input = Text(self.custom_frame, width=20, height=1, font=self.font)
-        self.album_input.bind("<Tab>", focus_next_window)
+        self.album_input.bind('<Tab>', focus_next_window)
         self.cover_art = ttk.Button(self.custom_frame, text='Browse for cover art', command=self.cover_art_browse)
         self.cover_art_path = Entry(self.custom_frame, width=20, font=self.font)
         self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags', command=partial(self.custom, url))
@@ -255,14 +255,14 @@ class AudioJackGUI(object):
                 self.start_time_label = ttk.Label(self.mainframe, text='Start time: ')
                 self.start_time_label.pack()
                 self.start_time_input = Text(self.mainframe, width=20, height=1, font=self.font)
-                self.start_time_input.bind("<Tab>", focus_next_window)
+                self.start_time_input.bind('<Tab>', focus_next_window)
                 self.start_time_input.pack()
                 self.end_time_label = ttk.Label(self.mainframe, text='End time: ')
                 self.end_time_label.pack()
                 self.end_time_input = Text(self.mainframe, width=20, height=1, font=self.font)
-                self.end_time_input.bind("<Tab>", focus_next_window)
+                self.end_time_input.bind('<Tab>', focus_next_window)
                 self.end_time_input.pack()
-                self.cut_button = ttk.Button(self.mainframe, text="Cut File", command=self.cut)
+                self.cut_button = ttk.Button(self.mainframe, text='Cut File', command=self.cut)
                 self.cut_button.pack()
 
             self.enable_search()
@@ -297,7 +297,7 @@ class AudioJackGUI(object):
         os.startfile(file)
 
     def cut(self):
-        """ Cut the mp3 file """
+        ''' Cut the mp3 file '''
         self.file_button.config(state=DISABLED)
         self.cut_button.config(state=DISABLED)
         start_time = self.start_time_input.get(0.0, END).replace('\n', '')
@@ -385,9 +385,9 @@ class AudioJackGUI(object):
             pass
 
 def focus_next_window(event):
-    """ Focus next element """
+    ''' Focus next element '''
     event.widget.tk_focusNext().focus()
-    return("break")
+    return('break')
 
 
 root = Tk()
