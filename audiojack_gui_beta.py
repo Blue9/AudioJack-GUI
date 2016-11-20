@@ -5,7 +5,6 @@ from threading import Thread
 from ttk import Progressbar, Scrollbar # Tkinter's default scrollbar is not very pretty
 from PIL import Image, ImageTk
 import audiojack
-from datetime import datetime
 
 class AudioJackGUI(object):
     def __init__(self, master):
