@@ -1,8 +1,11 @@
+from __future__ import print_function
+
 import Queue
 import os
 import tkFileDialog
 import ttk
 import webbrowser
+from ConfigParser import SafeConfigParser
 from Tkinter import *
 from cStringIO import StringIO
 from functools import partial
@@ -24,6 +27,13 @@ class AudioJackGUI(object):
     def __init__(self, master):
         self.stop_cb_check = True
 
+        if not os.path.isfile('settings.ini'):
+            self.make_new_config()
+        else:
+            self.config_file = open('settings.ini', 'r+')
+            self.config = SafeConfigParser()
+            self.config.read('settings.ini')
+
         self.master = master
         self.font = ('Segoe UI', 10)
         
@@ -42,12 +52,18 @@ class AudioJackGUI(object):
         self.footer = Frame(self.master, bg='#ddd')
         self.credits = Label(self.footer, text='AudioJack v0.4.0', font=('Segoe UI', 14),
                              bg='#ddd')  # Use Tkinter label because ttk does not make it easy to change colors.
+
         self.support_link = Label(self.footer, text='Support', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
         self.support_link.bind('<Enter>', self.enter_link)
         self.support_link.bind('<Button-1>', self.open_url)
         self.support_link.bind('<Leave>', self.leave_link)
+
+        self.settings_link = Label(self.footer, text='Settings', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
+        self.settings_link.bind('<Button-1>', self.open_settings)
+
         self.credits.pack(side=LEFT)
         self.support_link.pack(side=RIGHT)
+        self.settings_link.pack(side=RIGHT)
         self.footer.pack(side=BOTTOM, fill=X)
 
         self.canvas.bind_all('<MouseWheel>', self.scroll)
@@ -75,6 +91,18 @@ class AudioJackGUI(object):
     def configure(self, e):
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
 
+    def make_new_config(self):
+        self.config_file = open('settings.ini', 'w')
+        self.config = SafeConfigParser()
+        self.config.read('settings.ini')
+
+        self.config.add_section('main')
+        self.config.set('main', 'download_path', '%s\Downloads' % os.path.expanduser('~'))
+        self.config.set('main', 'auto_cb_grab', 'true')
+
+        with open('settings.ini', 'w') as file:
+            self.config.write(file)
+
     def scroll(self, e):
         # TODO: Fix scrolling
         if self.mainframe.winfo_height() > self.master.winfo_height():
@@ -88,6 +116,44 @@ class AudioJackGUI(object):
 
     def leave_link(self, e):
         self.support_link.configure(cursor='arrow', font=('Segoe UI', 14))
+
+    def open_settings(self, e):
+        self.settings_window = Toplevel(self.mainframe, height=5)
+        self.settings_window.title('AudioJack-GUI v0.4.0 - Settings')
+        self.settings_window.iconbitmap('AudioJack Icon.ico')
+
+        Label(self.settings_window, text='Download path for music:').pack(side=LEFT)
+        self.download_path_input = Text(self.settings_window, width=50, height=1)
+        self.download_path_input.pack(side=LEFT)
+        self.download_path_input.insert(INSERT, self.config.get('main', 'download_path'))
+        Button(self.settings_window, text='Browse...', command=self.get_folder_path).pack(side=LEFT)
+
+        Label(self.settings_window, text='Auto Clipboard Paste').pack(side=LEFT)
+        self.cb_var = self.config.getboolean('main', 'auto_cb_grab')
+        self.auto_cb_grab_box = Checkbutton(self.settings_window, variable=self.cb_var)
+        self.auto_cb_grab_box.pack(side=LEFT)
+
+        self.buttons_frame = Frame(self.settings_window)
+        self.buttons_frame.pack(side=BOTTOM)
+        ttk.Button(self.buttons_frame, text='OK', command=self.save_settings).pack(side=RIGHT)
+        ttk.Button(self.buttons_frame, text='Cancel', command=self.cancel_settings).pack(side=RIGHT)
+
+    def get_folder_path(self):
+        self.download_path_input.delete(0.0, END)
+        self.download_path_input.insert(INSERT,
+                                        tkFileDialog.askdirectory(parent=self.settings_window, title='Choose a Folder'))
+
+    def save_settings(self):
+        self.config.set('main', 'download_path', self.download_path_input.get(0.0, END))
+        if self.cb_var:
+            self.config.set('main', 'auto_cb_grab', 'true')
+        else:
+            self.config.set('main', 'auto_cb_grab', 'false')
+        self.config.write(open('settings.ini', 'r+'))
+        self.settings_window.destroy()
+
+    def cancel_settings(self):
+        self.settings_window.destroy()
 
     def select_all(self, e):
         self.url_input.tag_add(SEL, '1.0', END)
@@ -286,7 +352,7 @@ class AudioJackGUI(object):
             with open(self.cover_art_path.get().replace('\n', ''), 'rb') as file:
                 entry['img'] = file.read().encode('base64')
         except IOError:
-            print 'File not found'
+            print('File not found')
         self.reset()
         file = audiojack.select(entry).replace('/', '\\')
         text = 'Open %s' % file
