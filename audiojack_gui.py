@@ -27,13 +27,6 @@ class AudioJackGUI(object):
     def __init__(self, master):
         self.stop_cb_check = True
 
-        if not os.path.isfile('settings.ini'):
-            self.make_new_config()
-        else:
-            self.config_file = open('settings.ini', 'r+')
-            self.config = SafeConfigParser()
-            self.config.read('settings.ini')
-
         self.master = master
         self.font = ('Segoe UI', 10)
         
@@ -86,7 +79,18 @@ class AudioJackGUI(object):
 
         self.new_cb = ''
         self.old_cb = pyperclip.paste()
-        self.stop_cb_check = False
+
+        if not os.path.isfile('settings.ini'):
+            self.make_new_config()
+        else:
+            self.config_file = open('settings.ini', 'r+')
+            self.config = SafeConfigParser()
+            self.config.read('settings.ini')
+
+            if self.config.getboolean('main', 'auto_cb_grab'):
+                self.stop_cb_check = False
+            else:
+                self.stop_cb_check = True
 
     def configure(self, e):
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
@@ -118,23 +122,28 @@ class AudioJackGUI(object):
         self.support_link.configure(cursor='arrow', font=('Segoe UI', 14))
 
     def open_settings(self, e):
-        self.settings_window = Toplevel(self.mainframe, height=5)
+        self.settings_window = Toplevel(self.mainframe, height=50)
         self.settings_window.title('AudioJack-GUI v0.4.0 - Settings')
         self.settings_window.iconbitmap('AudioJack Icon.ico')
 
-        Label(self.settings_window, text='Download path for music:').pack(side=LEFT)
+        Label(self.settings_window, text='Download path for music:').grid(row=0, column=0, padx=10, pady=10)
         self.download_path_input = Text(self.settings_window, width=50, height=1)
-        self.download_path_input.pack(side=LEFT)
+        self.download_path_input.grid(row=0, column=1, padx=10, pady=10)
         self.download_path_input.insert(INSERT, self.config.get('main', 'download_path'))
-        Button(self.settings_window, text='Browse...', command=self.get_folder_path).pack(side=LEFT)
+        Button(self.settings_window, text='Browse...', command=self.get_folder_path).grid(row=0, column=2, padx=10,
+                                                                                          pady=10)
 
-        Label(self.settings_window, text='Auto Clipboard Paste').pack(side=LEFT)
-        self.cb_var = self.config.getboolean('main', 'auto_cb_grab')
+        Label(self.settings_window, text='Auto Clipboard Paste ').grid(row=1, column=0, padx=10, pady=10)
+        self.cb_var = IntVar()
         self.auto_cb_grab_box = Checkbutton(self.settings_window, variable=self.cb_var)
-        self.auto_cb_grab_box.pack(side=LEFT)
+        if self.config.getboolean('main', 'auto_cb_grab'):
+            self.auto_cb_grab_box.select()
+        else:
+            self.auto_cb_grab_box.deselect()
+        self.auto_cb_grab_box.grid(row=1, column=1, sticky=W, padx=10, pady=10)
 
         self.buttons_frame = Frame(self.settings_window)
-        self.buttons_frame.pack(side=BOTTOM)
+        self.buttons_frame.grid(row=5, column=1, padx=10, pady=10, sticky=S)
         ttk.Button(self.buttons_frame, text='OK', command=self.save_settings).pack(side=RIGHT)
         ttk.Button(self.buttons_frame, text='Cancel', command=self.cancel_settings).pack(side=RIGHT)
 
@@ -145,10 +154,12 @@ class AudioJackGUI(object):
 
     def save_settings(self):
         self.config.set('main', 'download_path', self.download_path_input.get(0.0, END))
-        if self.cb_var:
+        if self.cb_var.get():
             self.config.set('main', 'auto_cb_grab', 'true')
+            self.stop_cb_check = False
         else:
             self.config.set('main', 'auto_cb_grab', 'false')
+            self.stop_cb_check = True
         self.config.write(open('settings.ini', 'r+'))
         self.settings_window.destroy()
 
@@ -282,7 +293,7 @@ class AudioJackGUI(object):
     
     def get_file(self, entry, download_queue):
         try:
-            file = audiojack.select(entry)
+            file = audiojack.select(entry, self.config.get('main', 'download_path'))
             download_queue.put(file)
         except DownloadError as e:
             if 'ffprobe' in str(e) or 'ffmpeg' in str(e):  # Checks if the error is cause by ffmpeg not being installed
