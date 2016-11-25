@@ -47,16 +47,18 @@ class AudioJackGUI(object):
                              bg='#ddd')  # Use Tkinter label because ttk does not make it easy to change colors.
 
         self.support_link = Label(self.footer, text='Support', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
-        self.support_link.bind('<Enter>', self.enter_link)
+        self.support_link.bind('<Enter>', lambda event: self.enter_link(self.support_link))
         self.support_link.bind('<Button-1>', self.open_url)
-        self.support_link.bind('<Leave>', self.leave_link)
+        self.support_link.bind('<Leave>', lambda event: self.leave_link(self.support_link))
 
         self.settings_link = Label(self.footer, text='Settings', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
+        self.settings_link.bind('<Enter>', lambda event: self.enter_link(self.settings_link))
         self.settings_link.bind('<Button-1>', self.open_settings)
+        self.settings_link.bind('<Leave>', lambda event: self.leave_link(self.settings_link))
 
         self.credits.pack(side=LEFT)
         self.support_link.pack(side=RIGHT)
-        self.settings_link.pack(side=RIGHT)
+        self.settings_link.pack(side=RIGHT, padx=10)
         self.footer.pack(side=BOTTOM, fill=X)
 
         self.canvas.bind_all('<MouseWheel>', self.scroll)
@@ -112,14 +114,14 @@ class AudioJackGUI(object):
         if self.mainframe.winfo_height() > self.master.winfo_height():
             self.canvas.yview_scroll(-1*(e.delta/30), 'units')
     
-    def enter_link(self, e):
-        self.support_link.configure(cursor='hand2', font=('Segoe UI', 14, 'underline'))
+    def enter_link(self, widget):
+        widget.configure(cursor='hand2', font=('Segoe UI', 14, 'underline'))
 
     def open_url(self, e):
         webbrowser.open('http://blue9.github.io/AudioJack-GUI/', autoraise=True)
 
-    def leave_link(self, e):
-        self.support_link.configure(cursor='arrow', font=('Segoe UI', 14))
+    def leave_link(self, widget):
+        widget.configure(cursor='arrow', font=('Segoe UI', 14))
 
     def open_settings(self, e):
         self.settings_window = Toplevel(self.mainframe, height=50)
@@ -153,7 +155,7 @@ class AudioJackGUI(object):
                                         tkFileDialog.askdirectory(parent=self.settings_window, title='Choose a Folder'))
 
     def save_settings(self):
-        self.config.set('main', 'download_path', self.download_path_input.get(0.0, END).replace('\n', ''))
+        self.config.set('main', 'download_path', self.download_path_input.get(0.0, END).replace('\n', '').strip())
         self.config.set('main', 'auto_cb_grab', str(self.cb_var.get()))
         self.stop_cb_check = not self.cb_var.get()
         self.config.write(open('settings.ini', 'r+'))
