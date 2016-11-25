@@ -25,7 +25,7 @@ audiojack.set_useragent('AudioJack-GUI', '0.4.0')
 
 class AudioJackGUI(object):
     def __init__(self, master):
-        self.stop_cb_check = True
+        self.stop_cb_check = False
 
         self.master = master
         self.font = ('Segoe UI', 10)
@@ -102,7 +102,7 @@ class AudioJackGUI(object):
 
         self.config.add_section('main')
         self.config.set('main', 'download_path', '%s\Downloads' % os.path.expanduser('~'))
-        self.config.set('main', 'auto_cb_grab', 'true')
+        self.config.set('main', 'auto_cb_grab', 'True')
 
         with open('settings.ini', 'w') as file:
             self.config.write(file)
@@ -153,13 +153,9 @@ class AudioJackGUI(object):
                                         tkFileDialog.askdirectory(parent=self.settings_window, title='Choose a Folder'))
 
     def save_settings(self):
-        self.config.set('main', 'download_path', self.download_path_input.get(0.0, END))
-        if self.cb_var.get():
-            self.config.set('main', 'auto_cb_grab', 'true')
-            self.stop_cb_check = False
-        else:
-            self.config.set('main', 'auto_cb_grab', 'false')
-            self.stop_cb_check = True
+        self.config.set('main', 'download_path', self.download_path_input.get(0.0, END).replace('\n', ''))
+        self.config.set('main', 'auto_cb_grab', str(self.cb_var.get()))
+        self.stop_cb_check = not self.cb_var.get()
         self.config.write(open('settings.ini', 'r+'))
         self.settings_window.destroy()
 
