@@ -220,9 +220,9 @@ class AudioJackGUI(object):
         self.search_progress.start(20)
         self.cancel = ttk.Button(self.mainframe, text='Cancel', command=self.cancel_search)
         self.cancel.pack()
-        self.master.after(100, self.add_results)
+        self.master.after(100, lambda: self.add_results(input))
 
-    def add_results(self):
+    def add_results(self, url):
         try:
             self.results_images = self.q.get(0)
             self.search_progress.pack_forget()
@@ -252,9 +252,9 @@ class AudioJackGUI(object):
                     self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP, command=partial(self.download, result))
                     self.result.grid(column=i%4, row=i/4)
                 self.results_frame.pack()
-                self.create_custom_frame(result['url'])
+                self.create_custom_frame(url)
         except Queue.Empty:
-            self.master.after(100, self.add_results)
+            self.master.after(100, lambda: self.add_results(url))
 
     def create_custom_frame(self, url):
         self.custom_frame = ttk.Frame(self.mainframe)
