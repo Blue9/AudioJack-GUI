@@ -34,7 +34,7 @@ After installing necessary requirements, using the program is quite self-explana
 2. [FFmpeg](https://www.ffmpeg.org/) (for MP3 conversion).  
 3. In addition, you will need to install the following modules for AudioJack to work:
  - [mutagen](https://bitbucket.org/lazka/mutagen)
- - [musicbrainzngs v0.6.dev0](https://github.com/alastair/python-musicbrainzngs)
+ - [musicbrainzngs v0.6](https://github.com/alastair/python-musicbrainzngs)
  - [youtube-dl](https://github.com/rg3/youtube-dl)
  - [pyperclip](https://github.com/asweigart/pyperclip)
  - [validators](https://validators.readthedocs.io/en/latest/)
