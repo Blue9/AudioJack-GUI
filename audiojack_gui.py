@@ -29,9 +29,9 @@ class AudioJackGUI(object):
 
         self.master = master
         self.font = ('Segoe UI', 10)
-        
+
         self.master.minsize(width=800, height=600)
-        
+
         self.canvas = Canvas(self.master, bd=0, highlightthickness=0)
         self.mainframe = ttk.Frame(self.canvas)
         self.scrollbar = Scrollbar(self.master, orient='vertical', command=self.canvas.yview)
@@ -112,8 +112,8 @@ class AudioJackGUI(object):
     def scroll(self, e):
         # TODO: Fix scrolling
         if self.mainframe.winfo_height() > self.master.winfo_height():
-            self.canvas.yview_scroll(-1*(e.delta/30), 'units')
-    
+            self.canvas.yview_scroll(-1 * (e.delta / 30), 'units')
+
     def enter_link(self, widget):
         widget.configure(cursor='hand2', font=('Segoe UI', 14, 'underline'))
 
@@ -182,21 +182,20 @@ class AudioJackGUI(object):
 
     def cancel_search(self):
         self.cancel.configure(text='Please wait...')
-        global run
-        run = False
+        self.run = False
 
     def get_results(self, input):
         try:
             results = audiojack.get_results(input)[:8]
             images = []
             for i, result in enumerate(results):
-                if run:
+                if self.run:
                     image_data = Image.open(StringIO(results[i]['img'].decode('base64')))
                     image_data = image_data.resize((200, 200), Image.ANTIALIAS)
                     images.append(ImageTk.PhotoImage(image=image_data))
                 else:
                     break
-            if run:
+            if self.run:
                 self.q.put([results, images])
             else:
                 self.q.put(0)
@@ -206,8 +205,7 @@ class AudioJackGUI(object):
             self.q.put(-2)
 
     def search(self, event=None):
-        global run
-        run = True
+        self.run = True
         input = self.url_input.get(0.0, END).replace('\n', '').replace(' ', '').replace('\t', '')
         self.reset()
         self.q = Queue.Queue()
@@ -220,7 +218,7 @@ class AudioJackGUI(object):
         self.search_progress.start(20)
         self.cancel = ttk.Button(self.mainframe, text='Cancel', command=self.cancel_search)
         self.cancel.pack()
-        self.master.after(100, lambda: self.add_results(input))
+        self.add_results(input)
 
     def add_results(self, url):
         try:
@@ -249,12 +247,13 @@ class AudioJackGUI(object):
                 self.results_label.pack()
                 for i, result in enumerate(self.results):
                     text = '%s\n%s\n%s' % (result['title'], result['artist'], result['album'])
-                    self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP, command=partial(self.download, result))
-                    self.result.grid(column=i%4, row=i/4)
+                    self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP,
+                                             command=partial(self.download, result))
+                    self.result.grid(column=i % 4, row=i / 4)
                 self.results_frame.pack()
                 self.create_custom_frame(url)
         except Queue.Empty:
-            self.master.after(100, lambda: self.add_results(url))
+            self.master.after(10, lambda: self.add_results(url))
 
     def create_custom_frame(self, url):
         self.custom_frame = ttk.Frame(self.mainframe)
@@ -270,7 +269,8 @@ class AudioJackGUI(object):
         self.album_input.bind('<Tab>', focus_next_window)
         self.cover_art = ttk.Button(self.custom_frame, text='Browse for cover art', command=self.cover_art_browse)
         self.cover_art_path = Entry(self.custom_frame, width=20, font=self.font)
-        self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags', command=partial(self.custom, url))
+        self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags',
+                                        command=partial(self.custom, url))
         self.custom_title.grid(row=0, columnspan=2)
         self.artist_label.grid(column=0, row=1)
         self.artist_input.grid(column=1, row=1)
@@ -288,7 +288,7 @@ class AudioJackGUI(object):
                                              filetypes=[('JPEG files', '*.jpg')])
         self.cover_art_path.delete(0, END)
         self.cover_art_path.insert(0, image)
-    
+
     def get_file(self, entry, download_queue):
         try:
             file = audiojack.select(entry, self.config.get('main', 'download_path'))
@@ -459,10 +459,11 @@ class AudioJackGUI(object):
         except Exception:
             pass
 
+
 def focus_next_window(event):
     ''' Focus next element '''
     event.widget.tk_focusNext().focus()
-    return('break')
+    return ('break')
 
 
 root = Tk()
