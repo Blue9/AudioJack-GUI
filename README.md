@@ -12,6 +12,19 @@ This program is strictly intended for demonstration purposes. Using this program
 ## Screenshots
 ![AudioJack-GUI in action](https://raw.githubusercontent.com/Blue9/AudioJack-GUI/master/screenshots/Screenshot_v2.png)
 
+## Step-by-step guide
+This short guide will show you how to get the source version of the program up and running.
+
+1. Install [Python 2.7](https://www.python.org/download/releases/2.7/)
+2. Open Command Prompt (or Terminal, depending on your OS).
+3. Type in the following command: `pip install mutagen musicbrainzngs youtube_dl pyperclip validators`.
+4. Download [`audiojack.py`](https://github.com/Blue9/AudioJack/blob/master/audiojack.py) and place it in a folder of your choice (you will be running the program from this folder, so I suggest you pick a folder other than your default downloads folder).
+5. Download [`audiojack_gui.py`](https://github.com/Blue9/AudioJack-GUI/blob/master/audiojack_gui.py) and place it in the same folder as `audiojack.py`.
+6. Download [FFmpeg](https://ffmpeg.org/download.html) and place the files `ffmpeg`, `ffprobe`, and `ffplay` in the same directory as your AudioJack files.
+7. Navigate Command Prompt to the folder and run `python audiojack_gui.py`.
+
+Whenever you want to run the program, just repeat step 7.
+
 ## Usage
 After installing necessary requirements, using the program is quite self-explanatory.
 
