@@ -19,7 +19,7 @@ This short guide will show you how to get the source version of the program up a
 2. Open Command Prompt (or Terminal, depending on your OS).
 3. Type in the following command: `pip install mutagen musicbrainzngs youtube_dl pyperclip validators Pillow`.
 4. Download [`audiojack.py`](https://github.com/Blue9/AudioJack/blob/master/audiojack.py) and place it in a folder of your choice (you will be running the program from this folder, so I suggest you pick a folder other than your default downloads folder).
-5. Download [`audiojack_gui.py`](https://github.com/Blue9/AudioJack-GUI/blob/master/audiojack_gui.py) and place it in the same folder as `audiojack.py`.
+5. Download [`audiojack_gui.py`](https://github.com/Blue9/AudioJack-GUI/blob/master/audiojack_gui.py) and [`AudioJack Icon.ico`](https://github.com/Blue9/AudioJack-GUI/blob/master/AudioJack%20Icon.ico) and place them in the same folder as `audiojack.py`.
 6. Download [FFmpeg](https://ffmpeg.org/download.html) and place the files `ffmpeg`, `ffprobe`, and `ffplay` in the same directory as your AudioJack files.
 7. Navigate Command Prompt to the folder and run `python audiojack_gui.py`.
 
