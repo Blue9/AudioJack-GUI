@@ -6,6 +6,7 @@ import os
 import tkFileDialog
 import ttk
 import webbrowser
+import urllib2
 from ConfigParser import SafeConfigParser
 from Tkinter import *
 from cStringIO import StringIO
@@ -19,10 +20,7 @@ from musicbrainzngs.musicbrainz import NetworkError
 from validators import ValidationFailure
 from youtube_dl.utils import ExtractorError, DownloadError
 
-import audiojack
-
-audiojack.set_useragent('AudioJack-GUI', '0.4.0')
-
+from audiojack import AudioJack
 
 class AudioJackGUI(object):
     def __init__(self, master):
@@ -94,6 +92,8 @@ class AudioJackGUI(object):
                 self.stop_cb_check = False
             else:
                 self.stop_cb_check = True
+        
+        self.audiojack = AudioJack()
 
     def configure(self, e):
         self.canvas.configure(scrollregion=self.canvas.bbox('all'))
@@ -188,11 +188,13 @@ class AudioJackGUI(object):
 
     def get_results(self, input):
         try:
-            results = audiojack.get_results(input)[:8]
+            results = self.audiojack.get_results(input)[:8]
             images = []
             for i, result in enumerate(results):
                 if self.run:
-                    image_data = Image.open(StringIO(results[i]['img'].decode('base64')))
+                    img = urllib2.urlopen(results[i]['img'])
+                    image_data = Image.open(StringIO(img.read()))
+                    img.close()
                     image_data = image_data.resize((200, 200), Image.ANTIALIAS)
                     images.append(ImageTk.PhotoImage(image=image_data))
                 else:
@@ -293,11 +295,12 @@ class AudioJackGUI(object):
 
     def get_file(self, entry, download_queue):
         try:
-            file = audiojack.select(entry, self.config.get('main', 'download_path'))
+            file = self.audiojack.select(entry, self.config.get('main', 'download_path'))
             download_queue.put(file)
         except DownloadError as e:
             if 'ffprobe' in str(e) or 'ffmpeg' in str(e):  # Checks if the error is cause by ffmpeg not being installed
-                file = '%s/Downloads/%s.temp' % (os.path.expanduser('~'), audiojack.title)  # Delete temp file
+                title = entry['title'] if 'title' in entry else 'download'
+                file = '%s/Downloads/%s.temp' % (os.path.expanduser('~'), title)  # Delete temp file
                 try:
                     os.remove(file)
                 except Exception:
@@ -365,7 +368,7 @@ class AudioJackGUI(object):
         except IOError:
             print('File not found')
         self.reset()
-        file = audiojack.select(entry).replace('/', '\\')
+        file = self.audiojack.select(entry).replace('/', '\\')
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
@@ -380,7 +383,7 @@ class AudioJackGUI(object):
         start_time = self.start_time_input.get(0.0, END).replace('\n', '')
         end_time = self.end_time_input.get(0.0, END).replace('\n', '')
         self.master.update_idletasks()
-        audiojack.cut_file(self.file, start_time, end_time)
+        self.audiojack.cut_file(self.file, start_time, end_time)
         self.file_button.config(state=NORMAL)
         self.cut_button.config(state=NORMAL)
 
