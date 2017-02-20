@@ -363,13 +363,9 @@ class AudioJackGUI(object):
             'album': self.album_input.get(0.0, END).replace('\n', ''),
             'url': url
         }
-        try:
-            with open(self.cover_art_path.get().replace('\n', ''), 'rb') as file:
-                entry['img'] = file.read().encode('base64')
-        except IOError:
-            print('File not found')
+        entry['img'] = self.cover_art_path.get().replace('\n', '')
         self.reset()
-        file = self.audiojack.select(entry).replace('/', '\\')
+        file = self.audiojack.select(entry, self.config.get('main', 'download_path')).replace('/', '\\')
         text = 'Open %s' % file
         self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
         self.file.pack()
