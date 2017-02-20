@@ -22,6 +22,7 @@ from youtube_dl.utils import ExtractorError, DownloadError
 
 from audiojack import AudioJack
 
+
 class AudioJackGUI(object):
     def __init__(self, master):
         self.stop_cb_check = False
@@ -92,7 +93,7 @@ class AudioJackGUI(object):
                 self.stop_cb_check = False
             else:
                 self.stop_cb_check = True
-        
+
         self.audiojack = AudioJack()
 
     def configure(self, e):
