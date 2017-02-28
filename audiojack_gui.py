@@ -129,7 +129,7 @@ class AudioJackGUI(object):
         self.settings_window = Toplevel(self.mainframe, height=50)
         self.settings_window.title('AudioJack-GUI v0.4.0 - Settings')
         if os.name == 'nt':
-            self.settings_window.iconbitmap('AudioJack Icon.ico')
+            self.settings_window.iconbitmap('icon.ico')
 
         Label(self.settings_window, text='Download path for music:').grid(row=0, column=0, padx=10, pady=10)
         self.download_path_input = Text(self.settings_window, width=50, height=1)
@@ -471,7 +471,7 @@ def focus_next_window(event):
 root = Tk()
 root.title('AudioJack-GUI v0.4.0')
 if os.name == 'nt':
-    root.iconbitmap('AudioJack Icon.ico')
+    root.iconbitmap('icon.ico')
 app = AudioJackGUI(root)
 
 
