@@ -11,16 +11,16 @@ This program is strictly intended for demonstration purposes. Using this program
 ![AudioJack-GUI in action](/screenshots/scr_2.png)
 
 ## Step-by-step guide
-This short guide will show you how to get the source version of the program up and running. We will be running the beta version of the program.
+This short guide will show you how to get the source version of the program up and running.
 
 1. Install [Python 2.7](https://www.python.org/download/releases/2.7/)
 2. Open Command Prompt (or Terminal, depending on your OS).
 3. Install Kivy by following the guide [here](https://kivy.org/docs/installation/installation.html#stable-version).
 4. Type in the following command: `pip install mutagen musicbrainzngs youtube_dl pyperclip validators Pillow`.
 5. Download [AudioJack-GUI](https://github.com/Blue9/AudioJack-GUI/archive/master.zip) extract the files.
-6. Download [`audiojack.py`](https://github.com/Blue9/AudioJack/blob/master/audiojack.py) and place it in the `beta/` folder.
-7. Download [FFmpeg](https://ffmpeg.org/download.html) and place the files `ffmpeg`, `ffprobe`, and `ffplay` in `beta/`.
-8. Navigate Command Prompt to the `beta/` folder and run `python launcher.py`.
+6. Download [`audiojack.py`](https://github.com/Blue9/AudioJack/blob/master/audiojack.py) and place it in the `AudioJack-GUI` folder.
+7. Download [FFmpeg](https://ffmpeg.org/download.html) and place the files `ffmpeg`, `ffprobe`, and `ffplay` in the same folder.
+8. Navigate Command Prompt to the folder and run `python launcher.py`.
 
 Whenever you want to run the program, just repeat step 8.
 
