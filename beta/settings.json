@@ -1,0 +1,16 @@
+[
+    {
+        "type": "dir",
+        "title": "Download path",
+        "desc": "Files will be downloaded here",
+        "key": "dl_path",
+        "section": "main"
+    },
+    {
+        "type": "bool",
+        "title": "Auto clipboard paste",
+        "desc": "If true, the URL input will automatically be filled with the clipboard content",
+        "key": "auto_cb",
+        "section": "main"
+    }
+]

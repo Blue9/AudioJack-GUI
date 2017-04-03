@@ -1,0 +1,145 @@
+#:kivy 1.9.1
+
+<MainGUI>:
+    color_theme: (0.07, 0.21, 0.42, 1.0)
+    canvas.before:
+        Color:
+            rgba: root.color_theme
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    StackLayout:
+        id: main_layout
+        orientation: 'tb-lr'
+        size_hint: (0.8, 1.0)
+        pos_hint: {'center_x': 0.5}
+        spacing: [0, 10]
+
+        Label:
+            # Logo
+            text: 'AudioJack'
+            font_size: '64sp'
+            size_hint: (1.0, 0.2)
+
+        BoxLayout:
+            size_hint: (1.0, 0.1)
+            TextInput:
+                # URL input
+                id: url_input
+                background_normal: ''
+                background_active: ''
+                hint_text: 'Enter a YouTube or SoundCloud URL'
+                font_size: '40sp'
+                size_hint: (0.9, 1.0)
+                multiline: False
+                padding: self.padding[0], (self.height - self.line_height) / 2
+
+            HoverableButton:
+                # Search button
+                id: btn_submit
+                size_hint: (0.1, 1.0)
+                text: 'Search'
+                # background_down: ''
+                background_normal: ''
+
+        Label:
+            # Error messages will be presented through this label
+            id: error_msg
+            color: (1, 0, 0, 1)
+            size_hint: (1.0, 0.08)
+            font_size: '20sp'
+            text: 'Error placeholder'
+
+        Label:
+            id: loading_msg
+            color: (1, 1, 1, 1)
+            size_hint: (1.0, 0.08)
+            font_size: '20sp'
+            text: 'Loading...'
+
+        HoverableButton:
+            # Button to open downloaded file
+            id: open_file_button
+            size_hint: (1.0, 0.08)
+            font_size: '20sp'
+            # background_down: ''
+            background_normal: ''
+
+        BoxLayout:
+            # Contains options to cut file
+            orientation: 'vertical'
+            id: cut_file
+            size_hint: (1.0, 0.3)
+            spacing: 5
+            pos_hint: {'center_x': 0.5}
+
+            Label:
+                text: 'Cut file'
+                font_size: '20sp'
+                color: (1, 1, 1, 1)
+                size_hint: (0.4, 0.3)
+                pos_hint: {'center_x': 0.5}
+
+            TextInput:
+                id: start_time
+                size_hint: (0.4, 0.25)
+                multiline: False
+                background_normal: ''
+                hint_text: 'Start time (s)'
+                font_size: '20sp'
+                padding: self.padding[0], (self.height - self.line_height) / 2
+                pos_hint: {'center_x': 0.5}
+
+            TextInput:
+                id: end_time
+                size_hint: (0.4, 0.25)
+                multiline: False
+                background_normal: ''
+                hint_text: 'End time (s)'
+                font_size: '20sp'
+                padding: self.padding[0], (self.height - self.line_height) / 2
+                pos_hint: {'center_x': 0.5}
+
+            HoverableButton:
+                text: 'Cut'
+                id: cut_file_btn
+                size_hint: (0.4, 0.2)
+                pos_hint: {'center_x': 0.5}
+
+        BoxLayout:
+            # Results
+            orientation: 'vertical'
+            id: results
+            size_hint: (1.0, 0.54)
+
+            Label:
+                id: results_label
+                text: 'Result information placeholder'
+                color: (1, 1, 1, 1)
+                font_size: '20sp'
+                size_hint: (1.0, 0.1)
+
+            ScrollView:
+                size_hint: (1.0, 0.9)
+
+                StackLayout:
+                    # Results grid
+                    orientation: 'lr-tb'
+                    id: results_grid
+                    size_hint_y: None
+                    background_color: (1, 1, 1, 1)
+                    spacing: 10
+
+<CoverArt>:
+    canvas.after:
+        Color:
+            rgba: (0, 0, 0, self.overlay)
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+<HoverableButton>:
+    color: (0.07, 0.21, 0.42, 1.0)
+    background_color: (0.3, 0.5, 0.75, 1) if self.hover else (0.8, 0.9, 0.95, 1)
+    background_normal: ''
