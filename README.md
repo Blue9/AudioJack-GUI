@@ -58,3 +58,7 @@ After installing necessary requirements, using the program is quite self-explana
 1. Use single-quotes for string literals.
 2. If you use any additional modules, please update the [requirements](#requirements) if necessary.
 3. Thoroughly test the program before pushing.
+
+## Credits:
+- Hoverable button functionality: [link](https://gist.github.com/opqopq/15c707dc4cffc2b6455f) (modified)
+- Loading album art image: [link](https://commons.wikimedia.org/wiki/File:No-album-art.png)
