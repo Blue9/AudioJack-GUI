@@ -15,7 +15,7 @@ This short guide will show you how to get the source version of the program up a
 
 1. Install [Python 2.7](https://www.python.org/download/releases/2.7/)
 2. Open Command Prompt (or Terminal, depending on your OS).
-3. Install Kivy by following the guide [here](https://kivy.org/docs/installation/installation.html).
+3. Install Kivy by following the guide [here](https://kivy.org/docs/installation/installation.html#stable-version).
 4. Type in the following command: `pip install mutagen musicbrainzngs youtube_dl pyperclip validators Pillow`.
 5. Download [AudioJack-GUI](https://github.com/Blue9/AudioJack-GUI/archive/master.zip) extract the files.
 6. Download [`audiojack.py`](https://github.com/Blue9/AudioJack/blob/master/audiojack.py) and place it in the `beta/` folder.
@@ -49,7 +49,7 @@ After installing necessary requirements, using the program is quite self-explana
  - [pyperclip](https://github.com/asweigart/pyperclip)
  - [validators](https://validators.readthedocs.io/en/latest/)
  - [Pillow](https://pillow.readthedocs.io)
- - [Kivy](https://kivy.org/docs/installation/installation.html)
+ - [Kivy](https://kivy.org/docs/installation/installation.html#stable-version)
 
 ## Contribution:
 - Contributing to this project is highly encouraged.
