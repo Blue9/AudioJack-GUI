@@ -1,4 +1,4 @@
-![AudioJack-GUI](/logo/AudioJack%20Logo.png)
+![AudioJack-GUI](/logo/logo.png)
 
 A smart YouTube-to-MP3 converter that automatically finds and adds ID3 tags (artist, title, album, cover art) to downloaded MP3 files.
 
