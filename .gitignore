@@ -1,0 +1,6 @@
+.idea/
+*.pyc
+*.mp3
+*.exe
+/audiojack.py
+/audiojackgui.ini

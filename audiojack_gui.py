@@ -1,497 +1,273 @@
-#!/usr/bin/env python
-from __future__ import print_function
-
-import Queue
 import os
-import tkFileDialog
-import ttk
 import webbrowser
-import urllib2
-from ConfigParser import SafeConfigParser
-from Tkinter import *
-from cStringIO import StringIO
-from functools import partial
-from threading import Thread
-
 import pyperclip
-import validators
-from PIL import Image, ImageTk
-from musicbrainzngs.musicbrainz import NetworkError
-from validators import ValidationFailure
-from youtube_dl.utils import ExtractorError, DownloadError
+from functools import partial
+from threading import Thread, current_thread
+from kivy.app import App
+from kivy.clock import Clock
+from kivy.loader import Loader
+from kivy.modules import inspector
+from kivy.core.window import Window
+from kivy.properties import BooleanProperty, NumericProperty
+from kivy.uix.widget import Widget
+from kivy.uix.button import Button, ButtonBehavior
+from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.image import AsyncImage
+from kivy.uix.label import Label
+from kivy.uix.settings import Settings, SettingPath
 
-from audiojack import AudioJack
+Loader.num_workers = 8
+Loader.max_upload_per_frame = 8
+Loader.loading_image = 'img/loading.png'
 
 
-class AudioJackGUI(object):
-    def __init__(self, master):
-        self.stop_cb_check = False
+class SettingDirectory(SettingPath):
+    def _validate(self, instance):
+        super(SettingDirectory, self)._validate(instance)
+        if not os.path.isdir(self.value):
+            self.value = os.path.dirname(self.value)
 
-        self.master = master
-        self.font = ('Segoe UI', 10)
 
-        self.master.minsize(width=800, height=600)
+class MainGUI(FloatLayout):
+    def __init__(self):
+        super(MainGUI, self).__init__()
 
-        self.canvas = Canvas(self.master, bd=0, highlightthickness=0)
-        self.mainframe = ttk.Frame(self.canvas)
-        self.scrollbar = Scrollbar(self.master, orient='vertical', command=self.canvas.yview)
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-        self.scrollbar.pack(side=RIGHT, fill=Y)
-        self.canvas.create_window((0, 0), window=self.mainframe, anchor=N, tags='self.mainframe')
-        self.mainframe.bind('<Configure>', self.configure)
-        self.mainframe.pack(side=TOP, fill=X)
-        self.canvas.pack(side=TOP, fill=BOTH, expand=1)
 
-        self.footer = Frame(self.master, bg='#ddd')
-        self.credits = Label(self.footer, text='AudioJack v0.4.0', font=('Segoe UI', 14),
-                             bg='#ddd')  # Use Tkinter label because ttk does not make it easy to change colors.
+class Hoverable(Widget):
+    hover = BooleanProperty(False)
 
-        self.support_link = Label(self.footer, text='Support', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
-        self.support_link.bind('<Enter>', lambda event: self.enter_link(self.support_link))
-        self.support_link.bind('<Button-1>', self.open_url)
-        self.support_link.bind('<Leave>', lambda event: self.leave_link(self.support_link))
+    def __init__(self, **kwargs):
+        Window.bind(mouse_pos=self.on_mouse_pos)
+        super(Hoverable, self).__init__(**kwargs)
 
-        self.settings_link = Label(self.footer, text='Settings', font=('Segoe UI', 14), fg='#167ac6', bg='#ddd')
-        self.settings_link.bind('<Enter>', lambda event: self.enter_link(self.settings_link))
-        self.settings_link.bind('<Button-1>', self.open_settings)
-        self.settings_link.bind('<Leave>', lambda event: self.leave_link(self.settings_link))
+    def on_mouse_pos(self, *args):
+        if self.parent:
+            pos = args[1]
+            # We use self.parent.to_widget rather than self.to_widget because the result buttons' positions are
+            # relative to their parents (this is not a issue for the other hoverable buttons).
+            hovered = self.collide_point(*self.parent.to_widget(*pos))
+            if self.hover != hovered:
+                self.hover = hovered
 
-        self.credits.pack(side=LEFT)
-        self.support_link.pack(side=RIGHT)
-        self.settings_link.pack(side=RIGHT, padx=10)
-        self.footer.pack(side=BOTTOM, fill=X)
 
-        self.canvas.bind_all('<MouseWheel>', self.scroll)
+class HoverableButton(Button, Hoverable):
+    pass
 
-        self.title = ttk.Label(self.mainframe, text='AudioJack', font=('Segoe UI', 24))
-        self.title.pack()
 
-        self.url = ttk.Label(self.mainframe, text='Enter a YouTube or SoundCloud URL below.', font=self.font)
-        self.url.pack()
+class CoverArt(AsyncImage):
+    overlay = NumericProperty(0)
 
-        self.url_input = Text(self.mainframe, width=40, height=1, font=self.font, wrap=NONE)
-        self.url_input.bind('<Tab>', focus_next_window)
-        self.url_input.bind('<Return>', self.search)
-        self.url_input.bind('<Control-Key-a>', self.select_all)
-        self.url_input.bind('<Control-Key-A>', self.select_all)
-        self.url_input.pack()
+    def __init__(self, **kwargs):
+        super(CoverArt, self).__init__(**kwargs)
+        self.anim_delay = 0.1
 
-        self.submit = ttk.Button(self.mainframe, text='Go!', command=self.search)
-        self.submit.pack()
 
-        self.new_cb = ''
-        self.old_cb = pyperclip.paste()
+class ResultButton(ButtonBehavior, RelativeLayout, Hoverable):
+    def __init__(self, result):
+        super(ResultButton, self).__init__()
+        self.label = Label(text='%s\n%s\n%s' % (result['title'], result['artist'], result['album']), halign='center',
+                           font_size='20sp', size_hint=(1, 1), opacity=0)
+        self.image = CoverArt(source=result['img'], allow_stretch=True, size_hint=(1, 1))
+        self.add_widget(self.image)
+        self.add_widget(self.label)
+        self.size_hint = (0.25, None)
+        self.bind(width=self.set_height)
+        self.bind(hover=self.on_hover)
 
-        if not os.path.isfile('settings.ini'):
-            self.make_new_config()
+    def set_height(self, *args):
+        self.height = self.width
+        self.label.text_size = (self.width, None)
+
+    def on_hover(self, *args):
+        if self.hover:
+            self.label.opacity = 1
+            self.image.overlay = 0.6
         else:
-            self.config_file = open('settings.ini', 'r+')
-            self.config = SafeConfigParser()
-            self.config.read('settings.ini')
+            self.label.opacity = 0
+            self.image.overlay = 0
 
-            if self.config.getboolean('main', 'auto_cb_grab'):
-                self.stop_cb_check = False
-            else:
-                self.stop_cb_check = True
 
-        self.audiojack = AudioJack()
+class AudioJackGUI(App):
+    use_kivy_settings = False
 
-    def configure(self, e):
-        self.canvas.configure(scrollregion=self.canvas.bbox('all'))
+    def __init__(self):
+        super(AudioJackGUI, self).__init__()
+        self.audiojack = None
+        self.gui = None
+        self.local_search = None
+        self._keyboard = None
+        self.current_search_thread = None
 
-    def make_new_config(self):
-        self.config_file = open('settings.ini', 'w')
-        self.config = SafeConfigParser()
-        self.config.read('settings.ini')
+        self.error_msg = None
+        self.loading_msg = None
+        self.results = None
+        self.open_file_button = None
+        self.cut_file = None
+        self.path = None
 
-        self.config.add_section('main')
-        self.config.set('main', 'download_path', '%s\Downloads' % os.path.expanduser('~'))
-        self.config.set('main', 'auto_cb_grab', 'True')
+    def build(self):
+        self.gui = MainGUI()
+        self.initialize_widgets()
+        Clock.schedule_interval(self.check_cb, 1)
+        inspector.create_inspector(Window, self.gui)
+        return self.gui
 
-        with open('settings.ini', 'w') as file:
-            self.config.write(file)
+    def build_config(self, config):
+        config.setdefaults('main', {
+            'dl_path': os.getcwd(),
+            'auto_cb': 1
+        })
+        self.path = config.get('main', 'dl_path')
 
-    def scroll(self, e):
-        # TODO: Fix scrolling
-        if self.mainframe.winfo_height() > self.master.winfo_height():
-            self.canvas.yview_scroll(-1 * (e.delta / 30), 'units')
+    def build_settings(self, settings):
+        settings.register_type('dir', SettingDirectory)
+        settings.add_json_panel('Main', self.config, 'settings.json')
 
-    def enter_link(self, widget):
-        widget.configure(cursor='hand2', font=('Segoe UI', 14, 'underline'))
+    def on_config_change(self, config, section, key, value):
+        self.path = config.get('main', 'dl_path')
 
-    def open_url(self, e):
-        webbrowser.open('http://blue9.github.io/AudioJack-GUI/', autoraise=True)
+    def check_cb(self, dt):
+        if self.config.getboolean('main', 'auto_cb'):
+            cb = pyperclip.paste()
+            # Lazy url validation
+            if cb.startswith('http'):
+                # This is necessary to reset the cursor position in the TextInput box.
+                self.gui.ids.url_input.text = ''
+                self.gui.ids.url_input.text = cb
 
-    def leave_link(self, widget):
-        widget.configure(cursor='arrow', font=('Segoe UI', 14))
+    def initialize_widgets(self):
+        self.error_msg = self.gui.ids.error_msg.__self__  # Keep a reference to prevent GC when removing from the GUI.
+        self.loading_msg = self.gui.ids.loading_msg.__self__
+        self.results = self.gui.ids.results.__self__
+        self.open_file_button = self.gui.ids.open_file_button.__self__
+        self.cut_file = self.gui.ids.cut_file.__self__
+        self.hide_error()
+        self.hide_loading()
+        self.hide_all()
+        self.gui.ids.btn_submit.bind(on_release=self.search)
+        self.gui.ids.url_input.bind(on_text_validate=self.search, focus=self.auto_hide_error)
+        self.gui.ids.results_grid.bind(minimum_height=self.gui.ids.results_grid.setter('height'))
 
-    def open_settings(self, e):
-        self.settings_window = Toplevel(self.mainframe, height=50)
-        self.settings_window.title('AudioJack-GUI v0.4.0 - Settings')
-        if os.name == 'nt':
-            self.settings_window.iconbitmap('icon.ico')
+    def search(self, *args):
+        self.hide_error()
+        self.hide_all()
+        url = self.gui.ids.url_input.text
+        self.loading()
+        # call self._search in new thread
+        self.current_search_thread = Thread(target=self._search, args=(url,))
+        self.current_search_thread.start()
 
-        Label(self.settings_window, text='Download path for music:').grid(row=0, column=0, padx=10, pady=10)
-        self.download_path_input = Text(self.settings_window, width=50, height=1)
-        self.download_path_input.grid(row=0, column=1, padx=10, pady=10)
-        self.download_path_input.insert(INSERT, self.config.get('main', 'download_path'))
-        Button(self.settings_window, text='Browse...', command=self.get_folder_path).grid(row=0, column=2, padx=10,
-                                                                                          pady=10)
+    def _search(self, url):
+        self.audiojack.search(url)
 
-        Label(self.settings_window, text='Auto Clipboard Paste ').grid(row=1, column=0, padx=10, pady=10)
-        self.cb_var = IntVar()
-        self.auto_cb_grab_box = Checkbutton(self.settings_window, variable=self.cb_var)
-        if self.config.getboolean('main', 'auto_cb_grab'):
-            self.auto_cb_grab_box.select()
+    def select(self, index, *args):
+        print self.path
+        self.hide_all()
+        self.hide_error()
+        self.loading()
+        self.current_search_thread = Thread(target=self._select, args=(index,))
+        self.current_search_thread.start()
+        return True
+
+    def _select(self, index):
+        self.local_search.select(index, path=self.path)
+        self.notify()
+
+    def hide_all(self):
+        self.hide_results()
+        self.hide_file()
+        self.hide_cut_file()
+
+    def hide_results(self, *args):
+        if self.results.parent:
+            self.results.parent.remove_widget(self.results)
+        self.gui.ids.results_grid.clear_widgets()
+
+    def handle_results(self, *args):
+        if len(self.local_search.results) == 0:
+            self.gui.ids.results_label.text = 'No results found.'
         else:
-            self.auto_cb_grab_box.deselect()
-        self.auto_cb_grab_box.grid(row=1, column=1, sticky=W, padx=10, pady=10)
+            self.gui.ids.results_label.text = '%d results found.' % len(self.local_search.results)
+            for i, result in enumerate(self.local_search.results):
+                result_btn = ResultButton(result)
+                result_btn.bind(on_release=partial(self.select, i))
+                self.gui.ids.results_grid.add_widget(result_btn)
+        self.show_results()
 
-        self.buttons_frame = Frame(self.settings_window)
-        self.buttons_frame.grid(row=5, column=1, padx=10, pady=10, sticky=S)
-        ttk.Button(self.buttons_frame, text='OK', command=self.save_settings).pack(side=RIGHT)
-        ttk.Button(self.buttons_frame, text='Cancel', command=self.cancel_settings).pack(side=RIGHT)
+    def show_results(self):
+        if not self.results.parent:
+            self.gui.ids.main_layout.add_widget(self.results)
 
-    def get_folder_path(self):
-        self.download_path_input.delete(0.0, END)
-        self.download_path_input.insert(INSERT,
-                                        tkFileDialog.askdirectory(parent=self.settings_window, title='Choose a Folder'))
+    def handle_selection(self, *args):
+        print self.local_search.selection
 
-    def save_settings(self):
-        self.config.set('main', 'download_path', self.download_path_input.get(0.0, END).replace('\n', '').strip())
-        self.config.set('main', 'auto_cb_grab', str(self.cb_var.get()))
-        self.stop_cb_check = not self.cb_var.get()
-        self.config.write(open('settings.ini', 'r+'))
-        self.settings_window.destroy()
+    def hide_file(self):
+        if self.open_file_button.parent:
+            self.open_file_button.parent.remove_widget(self.open_file_button)
 
-    def cancel_settings(self):
-        self.settings_window.destroy()
+    def hide_cut_file(self):
+        if self.cut_file.parent:
+            self.cut_file.parent.remove_widget(self.cut_file)
 
-    def select_all(self, e):
-        self.url_input.tag_add(SEL, '1.0', END)
-        self.url_input.mark_set(INSERT, '1.0')
-        self.url_input.see(INSERT)
-        return 'break'
+    def handle_file(self, *args):
+        self.open_file_button.text = 'Open %s' % self.local_search.file
+        self.open_file_button.bind(on_release=self.open_file)
+        self.gui.ids.cut_file_btn.bind(on_release=self.cut)
+        if not self.open_file_button.parent:
+            self.gui.ids.main_layout.add_widget(self.open_file_button)
+        if not self.cut_file.parent:
+            self.gui.ids.main_layout.add_widget(self.cut_file)
 
-    def disable_search(self):
-        self.url_input.config(state=DISABLED)
-        self.submit.config(state=DISABLED)
-        self.url_input.unbind('<Return>')
+    def open_file(self, *args):
+        webbrowser.open(self.local_search.file)
 
-    def enable_search(self):
-        self.url_input.config(state=NORMAL)
-        self.submit.config(state=NORMAL)
-        self.url_input.bind('<Return>', self.search)
+    def cut(self, *args):
+        start = self.gui.ids.start_time.text
+        start = int(start) if start.isdigit() else 0
+        end = self.gui.ids.end_time.text
+        end = int(end) if end.isdigit() else None
+        self.local_search.cut_file(start, end)
 
-    def cancel_search(self):
-        self.cancel.configure(text='Please wait...')
-        self.run = False
+    def hide_loading(self, *args):
+        if self.loading_msg.parent:
+            self.loading_msg.parent.remove_widget(self.loading_msg)
 
-    def get_results(self, input):
-        try:
-            results = self.audiojack.get_results(input)[:8]
-            images = []
-            for i, result in enumerate(results):
-                if self.run:
-                    img = urllib2.urlopen(results[i]['img'])
-                    image_data = Image.open(StringIO(img.read()))
-                    img.close()
-                    image_data = image_data.resize((200, 200), Image.ANTIALIAS)
-                    images.append(ImageTk.PhotoImage(image=image_data))
+    def loading(self):
+        if not self.loading_msg.parent:
+            self.gui.ids.main_layout.add_widget(self.loading_msg)
+
+    def hide_error(self, *args):
+        if self.error_msg.parent:
+            self.error_msg.parent.remove_widget(self.error_msg)
+
+    def auto_hide_error(self, *args):
+        if self.gui.ids.url_input.focus:
+            self.hide_error()
+
+    def handle_error(self, error, *args):
+        # TODO: More descriptive error messages
+        self.hide_all()
+        if not self.error_msg.parent:
+            self.gui.ids.main_layout.add_widget(self.error_msg)
+        self.error_msg.text = 'An unknown error occurred.'
+
+    def notify(self):
+        if current_thread() == self.current_search_thread:
+            print 'Notified current thread'
+            self.hide_loading()
+            self.local_search = self.audiojack.last_search
+            if self.local_search:
+                if self.local_search.error != 0:
+                    # GUI changes must be done in the main thread.
+                    Clock.schedule_once(partial(self.handle_error, self.local_search.error))
                 else:
-                    break
-            if self.run:
-                self.q.put([results, images])
-            else:
-                self.q.put(0)
-        except (ExtractorError, DownloadError):  # If the URL is invalid,
-            self.q.put(-1)  # put -1 into the queue to indicate that the URL is invalid.
-        except NetworkError:
-            self.q.put(-2)
-
-    def search(self, event=None):
-        self.run = True
-        input = self.url_input.get(0.0, END).replace('\n', '').replace(' ', '').replace('\t', '')
-        self.reset()
-        self.q = Queue.Queue()
-        t = Thread(target=self.get_results, args=[input])
-        t.daemon = True
-        t.start()
-        self.disable_search()
-        self.search_progress = ttk.Progressbar(self.mainframe, length=200, mode='indeterminate')
-        self.search_progress.pack()
-        self.search_progress.start(20)
-        self.cancel = ttk.Button(self.mainframe, text='Cancel', command=self.cancel_search)
-        self.cancel.pack()
-        self.add_results(input)
-
-    def add_results(self, url):
-        try:
-            self.results_images = self.q.get(0)
-            self.search_progress.pack_forget()
-            self.search_progress.destroy()
-            self.cancel.pack_forget()
-            self.cancel.destroy()
-            if self.results_images == 0:
-                self.reset()
-            elif self.results_images == -1:  # If the URL is invalid
-                self.error = ttk.Label(self.mainframe, text='Error: Invalid URL', font=self.font, foreground='#ff0000')
-                self.error.pack()  # Create an error message
-                self.enable_search()  # Enable the search option again
-            elif self.results_images == -2:
-                self.error = ttk.Label(self.mainframe, text='Error: Network error', font=self.font,
-                                       foreground='#ff0000')
-                self.error.pack()  # Create an error message
-                self.enable_search()  # Enable the search option again
-            else:
-                self.enable_search()
-                self.results = self.results_images[0]
-                self.images = self.results_images[1]
-                self.results_frame = ttk.Frame(self.mainframe)
-                self.results_label = ttk.Label(self.mainframe, text='Results:', font=self.font)
-                self.results_label.pack()
-                for i, result in enumerate(self.results):
-                    text = '%s\n%s\n%s' % (result['title'], result['artist'], result['album'])
-                    self.result = ttk.Button(self.results_frame, text=text, image=self.images[i], compound=TOP,
-                                             command=partial(self.download, result))
-                    self.result.grid(column=i % 4, row=i / 4)
-                self.results_frame.pack()
-                self.create_custom_frame(url)
-        except Queue.Empty:
-            self.master.after(10, lambda: self.add_results(url))
-
-    def create_custom_frame(self, url):
-        self.custom_frame = ttk.Frame(self.mainframe)
-        self.custom_title = ttk.Label(self.custom_frame, text='Custom tags:')
-        self.artist_label = ttk.Label(self.custom_frame, text='Artist: ')
-        self.artist_input = Text(self.custom_frame, width=20, height=1, font=self.font)
-        self.artist_input.bind('<Tab>', focus_next_window)
-        self.title_label = ttk.Label(self.custom_frame, text='Title: ')
-        self.title_input = Text(self.custom_frame, width=20, height=1, font=self.font)
-        self.title_input.bind('<Tab>', focus_next_window)
-        self.album_label = ttk.Label(self.custom_frame, text='Album: ')
-        self.album_input = Text(self.custom_frame, width=20, height=1, font=self.font)
-        self.album_input.bind('<Tab>', focus_next_window)
-        self.cover_art = ttk.Button(self.custom_frame, text='Browse for cover art', command=self.cover_art_browse)
-        self.cover_art_path = Entry(self.custom_frame, width=20, font=self.font)
-        self.custom_submit = ttk.Button(self.custom_frame, text='Download using custom tags',
-                                        command=partial(self.custom, url))
-        self.custom_title.grid(row=0, columnspan=2)
-        self.artist_label.grid(column=0, row=1)
-        self.artist_input.grid(column=1, row=1)
-        self.title_label.grid(column=0, row=2)
-        self.title_input.grid(column=1, row=2)
-        self.album_label.grid(column=0, row=3)
-        self.album_input.grid(column=1, row=3)
-        self.cover_art.grid(column=0, row=4)
-        self.cover_art_path.grid(column=1, row=4)
-        self.custom_submit.grid(row=5, columnspan=2, sticky=EW, pady=10)
-        self.custom_frame.pack(pady=10)
-
-    def cover_art_browse(self):
-        image = tkFileDialog.askopenfilename(initialdir=os.path.expanduser('~'), parent=root,
-                                             filetypes=[('JPEG files', '*.jpg')])
-        self.cover_art_path.delete(0, END)
-        self.cover_art_path.insert(0, image)
-
-    def get_file(self, entry, download_queue):
-        try:
-            file = self.audiojack.select(entry, self.config.get('main', 'download_path'))
-            download_queue.put(file)
-        except DownloadError as e:
-            if 'ffprobe' in str(e) or 'ffmpeg' in str(e):  # Checks if the error is cause by ffmpeg not being installed
-                title = entry['title'] if 'title' in entry else 'download'
-                file = '%s/Downloads/%s.temp' % (os.path.expanduser('~'), title)  # Delete temp file
-                try:
-                    os.remove(file)
-                except Exception:
-                    pass
-                download_queue.put(0)
-
-    def download(self, entry):
-        self.reset()
-        self.download_queue = Queue.Queue()
-        dl_t = Thread(target=self.get_file, args=[entry, self.download_queue])
-        dl_t.daemon = True
-        dl_t.start()
-        self.disable_search()
-        self.download_progress = ttk.Progressbar(self.mainframe, length=200, mode='indeterminate')
-        self.download_progress.pack()
-        self.download_progress.start(20)
-        self.master.after(100, self.add_file)
-
-    def add_file(self):
-        try:
-            result = self.download_queue.get(0)
-            if result == 0:
-                self.error = ttk.Label(self.mainframe, text='Error: ffmpeg is not installed.', font=self.font,
-                                       foreground='#ff0000')
-                self.error.pack()
-            else:
-                self.file = result.replace('/', '\\')
-                text = 'Open %s' % self.file
-                self.file_button = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, self.file))
-
-                self.file_button.pack()
-                self.start_time_label = ttk.Label(self.mainframe, text='Start time: ')
-                self.start_time_label.pack()
-                self.start_time_input = Text(self.mainframe, width=20, height=1, font=self.font)
-                self.start_time_input.bind('<Tab>', focus_next_window)
-                self.start_time_input.pack()
-                self.end_time_label = ttk.Label(self.mainframe, text='End time: ')
-                self.end_time_label.pack()
-                self.end_time_input = Text(self.mainframe, width=20, height=1, font=self.font)
-                self.end_time_input.bind('<Tab>', focus_next_window)
-                self.end_time_input.pack()
-                self.cut_button = ttk.Button(self.mainframe, text='Cut File', command=self.cut)
-                self.cut_button.pack()
-
-            self.enable_search()
-            self.download_progress.pack_forget()
-            self.download_progress.destroy()
-            self.results_label.pack_forget()
-            self.results_label.destroy()
-            self.results_frame.pack_forget()
-            self.results_frame.destroy()
-        except Queue.Empty:
-            self.master.after(100, self.add_file)
-
-    def custom(self, url):
-        entry = {
-            'artist': self.artist_input.get(0.0, END).replace('\n', ''),
-            'title': self.title_input.get(0.0, END).replace('\n', ''),
-            'album': self.album_input.get(0.0, END).replace('\n', ''),
-            'url': url
-        }
-        entry['img'] = self.cover_art_path.get().replace('\n', '')
-        self.reset()
-        file = self.audiojack.select(entry, self.config.get('main', 'download_path')).replace('/', '\\')
-        text = 'Open %s' % file
-        self.file = ttk.Button(self.mainframe, text=text, command=partial(self.open_file, file))
-        self.file.pack()
-
-    def open_file(self, file):
-        os.startfile(file)
-
-    def cut(self):
-        ''' Cut the mp3 file '''
-        self.file_button.config(state=DISABLED)
-        self.cut_button.config(state=DISABLED)
-        start_time = self.start_time_input.get(0.0, END).replace('\n', '')
-        end_time = self.end_time_input.get(0.0, END).replace('\n', '')
-        self.master.update_idletasks()
-        self.audiojack.cut_file(self.file, start_time, end_time)
-        self.file_button.config(state=NORMAL)
-        self.cut_button.config(state=NORMAL)
-
-    def reset(self):
-        self.url_input.delete(0.0, END)
-        self.url_input.config(state=NORMAL)
-        self.submit.config(state=NORMAL)
-
-        try:
-            self.error.pack_forget()
-            self.error.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.cancel.pack_forget()
-            self.cancel.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.results_label.pack_forget()
-            self.results_label.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.results_frame.pack_forget()
-            self.results_frame.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.custom_frame.pack_forget()
-            self.custom_frame.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.file.pack_forget()
-            self.file.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.file_button.pack_forget()
-            self.file_button.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.start_time_label.pack_forget()
-            self.start_time_label.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.start_time_input.pack_forget()
-            self.start_time_input.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.end_time_label.pack_forget()
-            self.end_time_label.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.end_time_input.pack_forget()
-            self.end_time_input.destroy()
-        except Exception:
-            pass
-
-        try:
-            self.cut_button.pack_forget()
-            self.cut_button.destroy()
-        except Exception:
-            pass
-
-
-def focus_next_window(event):
-    ''' Focus next element '''
-    event.widget.tk_focusNext().focus()
-    return ('break')
-
-
-root = Tk()
-root.title('AudioJack-GUI v0.4.0')
-if os.name == 'nt':
-    root.iconbitmap('icon.ico')
-app = AudioJackGUI(root)
-
-
-def is_url(strg):
-    try:
-        return validators.url(strg)
-    except ValidationFailure:
-        return False
-
-
-def check_cb():
-    if not app.stop_cb_check:
-        app.new_cb = pyperclip.paste()
-        if not (app.new_cb is app.old_cb):
-            app.old_cb = app.new_cb
-            if is_url(app.old_cb):
-                app.url_input.delete(0.0, END)
-                app.url_input.insert(INSERT, app.old_cb)
-    root.after(1000, check_cb)
-
-
-root.after(5000, check_cb)
-root.mainloop()
+                    if self.local_search.file:
+                        Clock.schedule_once(self.handle_file)
+                    elif self.local_search.selection:
+                        Clock.schedule_once(self.handle_selection)
+                    elif self.local_search.results is not None:
+                        # An empty array by itself will evaluate to false so we check if it equals None instead.
+                        Clock.schedule_once(self.handle_results)
+        else:
+            print 'Notified outdated thread'
