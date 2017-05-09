@@ -146,6 +146,7 @@ class AudioJackGUI(App):
         self.hide_loading()
         self.hide_all()
         self.gui.ids.btn_submit.bind(on_release=self.search)
+        self.gui.ids.submit_custom.bind(on_release=self.custom)
         self.gui.ids.url_input.bind(on_text_validate=self.search, focus=self.auto_hide_error)
         self.gui.ids.results_grid.bind(minimum_height=self.gui.ids.results_grid.setter('height'))
 
@@ -172,6 +173,18 @@ class AudioJackGUI(App):
 
     def _select(self, index):
         self.local_search.select(index, path=self.path)
+        self.notify()
+
+    def custom(self, *args):
+        self.hide_all()
+        self.hide_error()
+        self.loading()
+        self.current_search_thread = Thread(target=self._custom)
+        self.current_search_thread.start()
+
+    def _custom(self):
+        self.local_search.custom(self.gui.ids.custom_title.text, self.gui.ids.custom_artist.text,
+                                 self.gui.ids.custom_album.text, path=self.path)
         self.notify()
 
     def hide_all(self):

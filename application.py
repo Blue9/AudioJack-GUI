@@ -51,6 +51,7 @@ class SearchRequest(object):
         self.selection = None
         self.file = None
         self.audiojack = AudioJack(small_cover_art=True)
+        self.url = url
         if url:
             self.search(url)
 
@@ -65,6 +66,18 @@ class SearchRequest(object):
         self.selection = self.results[index]
         try:
             self.file = self.audiojack.select(self.selection, path=path)
+        except AttributeError as e:
+            print e
+            self.error = 1
+
+    def custom(self, title, artist, album, path=None):
+        try:
+            self.file = self.audiojack.select({
+                'url': self.url,
+                'title': title,
+                'artist': artist,
+                'album': album
+            }, path=path)
         except AttributeError as e:
             print e
             self.error = 1

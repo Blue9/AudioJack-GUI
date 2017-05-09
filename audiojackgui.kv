@@ -123,13 +123,58 @@
             ScrollView:
                 size_hint: (1.0, 0.9)
 
-                StackLayout:
-                    # Results grid
-                    orientation: 'lr-tb'
-                    id: results_grid
+                GridLayout:
+                    cols: 1
                     size_hint_y: None
-                    background_color: (1, 1, 1, 1)
-                    spacing: 10
+                    height: self.minimum_height
+
+                    StackLayout:
+                        # Results grid
+                        orientation: 'lr-tb'
+                        id: results_grid
+                        size_hint_y: None
+                        spacing: 10
+
+                    BoxLayout:
+                        # Custom selection
+                        orientation: 'vertical'
+                        id: custom_selection
+                        size_hint_y: None
+                        spacing: 4
+                        height: '200px'
+
+                        Label:
+                            text: 'Custom selection'
+                            font_size: '20sp'
+                            size_hint_x: 0.5
+                            pos_hint: {'center_x': 0.5}
+
+                        TextInput:
+                            hint_text: 'Title'
+                            id: custom_title
+                            size_hint_x: 0.5
+                            pos_hint: {'center_x': 0.5}
+                            padding: self.padding[0], (self.height - self.line_height) / 2
+
+                        TextInput:
+                            hint_text: 'Artist'
+                            id: custom_artist
+                            size_hint_x: 0.5
+                            pos_hint: {'center_x': 0.5}
+                            padding: self.padding[0], (self.height - self.line_height) / 2
+
+                        TextInput:
+                            hint_text: 'Album'
+                            id: custom_album
+                            size_hint_x: 0.5
+                            pos_hint: {'center_x': 0.5}
+                            padding: self.padding[0], (self.height - self.line_height) / 2
+
+                        HoverableButton:
+                            text: 'Go!'
+                            id: submit_custom
+                            size_hint_x: 0.5
+                            pos_hint: {'center_x': 0.5}
 
 <CoverArt>:
     canvas.after:
