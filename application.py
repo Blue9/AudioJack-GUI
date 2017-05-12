@@ -59,7 +59,7 @@ class SearchRequest(object):
         try:
             self.results = self.audiojack.get_results(url)
         except AttributeError as e:
-            print e
+            print(e)
             self.error = 1
 
     def select(self, index, path=None):
@@ -67,7 +67,7 @@ class SearchRequest(object):
         try:
             self.file = self.audiojack.select(self.selection, path=path)
         except AttributeError as e:
-            print e
+            print(e)
             self.error = 1
 
     def custom(self, title, artist, album, path=None):
@@ -79,7 +79,7 @@ class SearchRequest(object):
                 'album': album
             }, path=path)
         except AttributeError as e:
-            print e
+            print(e)
             self.error = 1
 
     def cut_file(self, start, end):

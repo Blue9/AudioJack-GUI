@@ -163,7 +163,7 @@ class AudioJackGUI(App):
         self.audiojack.search(url)
 
     def select(self, index, *args):
-        print self.path
+        print(self.path)
         self.hide_all()
         self.hide_error()
         self.loading()
@@ -213,7 +213,7 @@ class AudioJackGUI(App):
             self.gui.ids.main_layout.add_widget(self.results)
 
     def handle_selection(self, *args):
-        print self.local_search.selection
+        print(self.local_search.selection)
 
     def hide_file(self):
         if self.open_file_button.parent:
@@ -267,7 +267,7 @@ class AudioJackGUI(App):
 
     def notify(self):
         if current_thread() == self.current_search_thread:
-            print 'Notified current thread'
+            print('Notified current thread')
             self.hide_loading()
             self.local_search = self.audiojack.last_search
             if self.local_search:
@@ -283,4 +283,4 @@ class AudioJackGUI(App):
                         # An empty array by itself will evaluate to false so we check if it equals None instead.
                         Clock.schedule_once(self.handle_results)
         else:
-            print 'Notified outdated thread'
+            print('Notified outdated thread')
