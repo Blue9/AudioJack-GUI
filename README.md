@@ -11,7 +11,7 @@ This program is strictly intended for demonstration purposes. Using this program
 ## Step-by-step guide
 This short guide will show you how to get the source version of the program up and running.
 
-1. Install [Python 2.7](https://www.python.org/download/releases/2.7/)
+1. Install Python 3.6+.
 2. Install Kivy by following the guide [here](https://kivy.org/docs/installation/installation.html#stable-version).
 3. Open Command Prompt (or Terminal, depending on your OS).
 4. Type in the following command: `pip install mutagen musicbrainzngs youtube_dl pyperclip validators Pillow`.
