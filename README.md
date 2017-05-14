@@ -37,7 +37,7 @@ After installing necessary requirements, using the program is quite self-explana
 ![Step 4](/screenshots/scr_3.png)
 
 ## Requirements
-1. Python 2.7 (**not Python 3**)
+1. Python 3.6+ (**not Python 2**)
 2. [AudioJack](https://github.com/Blue9/AudioJack)
 3. [FFmpeg](https://www.ffmpeg.org/) (for MP3 conversion).  
 4. In addition, you will need to install the following modules for AudioJack to work:
