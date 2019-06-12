@@ -47,7 +47,7 @@ After installing necessary requirements, using the program is quite self-explana
  - [pyperclip](https://github.com/asweigart/pyperclip)
  - [validators](https://validators.readthedocs.io/en/latest/)
  - [Pillow](https://pillow.readthedocs.io)
- - [Kivy](https://kivy.org/docs/installation/installation.html#stable-version)
+ - [Kivy](https://kivy.org/doc/stable/gettingstarted/installation.html)
 
 ## Contribution:
 - Contributing to this project is highly encouraged.
